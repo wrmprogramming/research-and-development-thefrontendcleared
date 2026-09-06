@@ -1,0 +1,195 @@
+/* src/styles/pages/province.css */
+
+.province-management {
+  padding: 20px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* ========== Province Name Cell ========== */
+.province-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.province-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-radius: 10px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.province-icon {
+  color: white !important;
+}
+
+.province-name {
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+/* ========== Cities Count Cell ========== */
+.cities-count-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cities-icon {
+  color: #6b7280;
+}
+
+.cities-count {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1a1a2e;
+}
+
+.cities-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ========== Date Cell ========== */
+.date-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.date-icon {
+  color: #9ca3af;
+}
+
+/* ========== Actions ========== */
+.actions-wrapper {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: #6b7280;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.edit-btn:hover {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.view-btn:hover {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* ========== Loading ========== */
+.generic-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.generic-loading .spinner-border {
+  width: 48px;
+  height: 48px;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-state h5 {
+  color: #1a1a2e;
+  font-weight: 600;
+}
+
+.empty-state .text-muted {
+  color: #6b7280;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .province-management {
+    padding: 12px;
+  }
+
+  .province-name-cell {
+    gap: 8px;
+  }
+
+  .province-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .province-icon-wrapper svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .cities-count {
+    font-size: 14px;
+  }
+}
+
+/* ========== Dark Mode Support ========== */
+@media (prefers-color-scheme: dark) {
+  .province-management {
+    background: #0f172a;
+  }
+
+  .province-name {
+    color: #e2e8f0;
+  }
+
+  .cities-count {
+    color: #e2e8f0;
+  }
+
+  .date-cell {
+    color: #94a3b8;
+  }
+
+  .empty-state h5 {
+    color: #e2e8f0;
+  }
+}

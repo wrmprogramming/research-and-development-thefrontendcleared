@@ -1,0 +1,77 @@
+
+@font-face {
+      font-family: 'lineicons';
+      src: url('assets/fonts/lineicons.eot');
+      src: url('assets/fonts/lineicons.eot?#iefix') format('embedded-opentype'),
+           url('assets/fonts/lineicons.woff2') format('woff2'),
+           url('assets/fonts/lineicons.woff') format('woff'),
+           url('assets/fonts/lineicons.ttf') format('truetype'),
+           url('assets/fonts/lineicons.svg') format('svg');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    /* فونت نازنین معمولی */
+@font-face {
+  font-family: 'BNazanin';
+  src: url('assets/fonts/BBadr.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+/* یا اگر می‌خواهید دو اسم متفاوت داشته باشید: */
+@font-face {
+  font-family: 'BNazaninBold';
+  src: url('assets/fonts/BBadrBd.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IranSans';
+  src: url('assets/fonts/irsans.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'BIranSans';
+  src: url('assets/fonts/irsansb.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* src/index.css */
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.rounded-circle {
+  border-radius: 50%;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f0f0f0;
+}
+
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.text-white {
+  color: white !important;
+}
+
+.border-primary {
+  border-color: #0d6efd !important;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}

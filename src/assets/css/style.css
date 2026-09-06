@@ -1,0 +1,271 @@
+
+/* ========================================
+   🌟 Style Guide - سیستم طراحی یکپارچه
+   ======================================== */
+/* assets/css/style-guide.css */
+/* ---------- 1. متغیرهای طراحی ---------- */
+:root {
+  /* پالت رنگ‌های اصلی (بر اساس برند شما) */
+  --color-primary: #4f46e5;        /* ایندیگو - رنگ اصلی */
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #3730a3;
+  --color-primary-bg: #eef2ff;
+
+  --color-secondary: #059669;      /* زمردی - برای تایید و موفقیت */
+  --color-secondary-light: #34d399;
+  --color-secondary-dark: #065f46;
+  --color-secondary-bg: #d1fae5;
+
+  --color-warning: #d97706;        /* کهربایی - برای هشدار */
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #92400e;
+  --color-warning-bg: #fef3c7;
+
+  --color-danger: #dc2626;         /* قرمز - برای خطا و حذف */
+  --color-danger-light: #f87171;
+  --color-danger-dark: #991b1b;
+  --color-danger-bg: #fee2e2;
+
+  --color-info: #2563eb;           /* آبی - برای اطلاعات */
+  --color-info-bg: #dbeafe;
+
+  /* رنگ‌های خنثی (Neutral) */
+  --color-gray-50:  #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-white: #ffffff;
+
+  /* فونت‌ها (با پشتیبانی از فارسی) */
+  --font-family-primary: 'IranSans', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* سایه‌ها (شباهت به Tailwind) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* گردی گوشه‌ها */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
+  --radius-full: 9999px;
+
+  /* فاصله‌گذاری (Spacing) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem;  /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem;    /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem;  /* 24px */
+  --space-8: 2rem;    /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem;   /* 48px */
+}
+
+/* ---------- 2. ریست و تنظیمات پایه ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+  line-height: 1.6;
+  direction: rtl;
+}
+
+/* ---------- 3. کلاس‌های کمکی (Utility Classes) ---------- */
+/* مانند Tailwind، اما سبک‌تر */
+.container-fluid {
+  width: 100%;
+  padding-right: var(--space-6);
+  padding-left: var(--space-6);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* کارت‌ها */
+.card-modern {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-gray-200);
+  padding: var(--space-6);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-modern:hover {
+  box-shadow: var(--shadow-lg);
+}
+.card-modern .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+.card-modern .card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+/* دکمه‌ها - یکپارچه */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease-in-out;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+.btn-secondary:hover {
+  background-color: var(--color-gray-300);
+}
+
+.btn-success {
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+}
+.btn-success:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-white);
+}
+.btn-danger:hover {
+  background-color: var(--color-danger-dark);
+}
+
+.btn-outline-primary {
+  background-color: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Badge */
+.badge-modern {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.badge-primary { background: var(--color-primary-bg); color: var(--color-primary); }
+.badge-success { background: var(--color-secondary-bg); color: var(--color-secondary-dark); }
+.badge-warning { background: var(--color-warning-bg); color: var(--color-warning-dark); }
+.badge-danger { background: var(--color-danger-bg); color: var(--color-danger-dark); }
+.badge-gray { background: var(--color-gray-200); color: var(--color-gray-700); }
+
+/* Inputs */
+.input-modern {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  background-color: var(--color-white);
+}
+.input-modern:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.input-modern.is-invalid {
+  border-color: var(--color-danger);
+}
+.input-modern.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* جدول‌ها */
+.table-modern {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-modern th {
+  text-align: right;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-200);
+  background-color: var(--color-gray-50);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.table-modern td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-gray-100);
+  vertical-align: middle;
+}
+.table-modern tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}

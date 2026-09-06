@@ -1,0 +1,271 @@
+/* src/styles/pages/university-tree.css */
+
+.university-tree-management {
+  padding: 20px;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* ========== Tree Row Content ========== */
+.tree-row-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  width: 100%;
+}
+
+/* ========== Province Row ========== */
+.province-row .row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.province-icon {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+}
+
+.province-row .row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.province-row .row-name {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 15px;
+}
+
+.province-badge {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* ========== City Row ========== */
+.city-row .row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.city-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.city-row .row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.city-row .row-name {
+  font-weight: 500;
+  color: #1a1a2e;
+  font-size: 14px;
+}
+
+.city-badge {
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* ========== University Row ========== */
+.university-row .row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.university-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.university-row .row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.university-row .row-name {
+  font-weight: 500;
+  color: #1a1a2e;
+  font-size: 14px;
+}
+
+.row-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.type-tag {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.phone-tag {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+/* ========== Actions ========== */
+.actions-wrapper {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: #6b7280;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.edit-btn:hover {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.view-btn:hover {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* ========== Tree Table Container ========== */
+.generic-tree-table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .university-tree-management {
+    padding: 12px;
+  }
+
+  .province-row .row-name {
+    font-size: 13px;
+  }
+
+  .city-row .row-name,
+  .university-row .row-name {
+    font-size: 12px;
+  }
+
+  .province-badge,
+  .city-badge {
+    font-size: 10px;
+    padding: 1px 8px;
+  }
+
+  .row-tags {
+    gap: 4px;
+  }
+
+  .row-tag {
+    font-size: 10px;
+    padding: 1px 8px;
+  }
+}
+
+/* ========== Dark Mode ========== */
+@media (prefers-color-scheme: dark) {
+  .university-tree-management {
+    background: #0f172a;
+  }
+
+  .generic-tree-table-container {
+    background: #1e293b;
+  }
+
+  .province-row .row-name {
+    color: #e2e8f0;
+  }
+
+  .city-row .row-name {
+    color: #e2e8f0;
+  }
+
+  .university-row .row-name {
+    color: #e2e8f0;
+  }
+
+  .province-badge {
+    background: #312e81;
+    color: #818cf8;
+  }
+
+  .city-badge {
+    background: #1e3a5f;
+    color: #60a5fa;
+  }
+
+  .type-tag {
+    background: #451a03;
+    color: #fbbf24;
+  }
+
+  .phone-tag {
+    background: #082f49;
+    color: #38bdf8;
+  }
+}
