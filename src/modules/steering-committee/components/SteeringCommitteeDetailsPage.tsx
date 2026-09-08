@@ -578,10 +578,10 @@ ${approvementsText}
           </button>
         </div>
         <div className="action-bar-right">
-          <button className="action-btn" onClick={handlePrint}>
+          {/* <button className="action-btn" onClick={handlePrint}>
             <Printer size={16} />
             چاپ
-          </button>
+          </button> */}
           <div className="export-wrapper">
             <button
               className="action-btn primary"
