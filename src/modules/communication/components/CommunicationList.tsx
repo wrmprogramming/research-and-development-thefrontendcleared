@@ -395,9 +395,9 @@ export const CommunicationList: React.FC<CommunicationListProps> = ({
                     </td>
                     <td>
                       <div className="actions">
-                        <button className="action-btn view" onClick={() => onView?.(communication)} title="مشاهده">
+                        {/* <button className="action-btn view" onClick={() => onView?.(communication)} title="مشاهده">
                           <Eye size={16} />
-                        </button>
+                        </button> */}
                         <button className="action-btn edit" onClick={() => onEdit?.(communication)} title="ویرایش">
                           <Pencil size={16} />
                         </button>

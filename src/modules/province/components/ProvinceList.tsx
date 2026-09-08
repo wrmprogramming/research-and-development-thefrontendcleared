@@ -193,13 +193,13 @@ export const ProvinceList: React.FC<ProvinceListProps> = ({
                   </td>
                   <td>
                     <div className="actions">
-                      <button
+                      {/* <button
                         className="action-btn view"
                         onClick={() => onView?.(province)}
                         title="مشاهده"
                       >
                         <Eye size={16} />
-                      </button>
+                      </button> */}
                       <button
                         className="action-btn edit"
                         onClick={() => onEdit?.(province)}

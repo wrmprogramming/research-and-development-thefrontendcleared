@@ -182,13 +182,13 @@ export const ProjectSubjectList: React.FC<ProjectSubjectListProps> = ({
                   <td>{subject.description || '—'}</td>
                   <td>
                     <div className="actions">
-                      <button
+                      {/* <button
                         className="action-btn view"
                         onClick={() => onView?.(subject)}
                         title="مشاهده"
                       >
                         <Eye size={16} />
-                      </button>
+                      </button> */}
                       <button
                         className="action-btn edit"
                         onClick={() => onEdit?.(subject)}

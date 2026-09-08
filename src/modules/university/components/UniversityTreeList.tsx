@@ -451,13 +451,13 @@ export const UniversityTreeList = forwardRef<any, UniversityTreeListProps>(({
 
           <td className="actions-cell">
             <div className="actions">
-              <button
+              {/* <button
                 className="action-btn view"
                 onClick={() => onView?.(node)}
                 title="مشاهده"
               >
                 <Eye size={16} />
-              </button>
+              </button> */}
 
               {isProvince ? (
                 <button

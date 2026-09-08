@@ -407,13 +407,13 @@ export const CompanyList: React.FC<CompanyListProps> = ({
                   <td>{company.province_name || '—'}</td>
                   <td>
                     <div className="actions">
-                      <button
+                      {/* <button
                         className="action-btn view"
                         onClick={() => onView?.(company)}
                         title="مشاهده"
                       >
                         <Eye size={16} />
-                      </button>
+                      </button> */}
                       <button
                         className="action-btn edit"
                         onClick={() => onEdit?.(company)}

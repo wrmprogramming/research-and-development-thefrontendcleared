@@ -333,13 +333,13 @@ export const CityTreeList = forwardRef<any, CityTreeListProps>(({
 
           <td className="actions-cell">
             <div className="actions">
-              <button
+              {/* <button
                 className="action-btn view"
                 onClick={() => onView?.(node)}
                 title="مشاهده"
               >
                 <Eye size={16} />
-              </button>
+              </button> */}
 
               {isProvince ? (
                 <button

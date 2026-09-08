@@ -29,6 +29,7 @@ export interface Payment extends IBaseModel {
   verified_by?: number | null;
   verified_by_name?: string;
   attachments?: PaymentAttachment[];
+  contract_total_amount?: number; 
 }
 
 export interface PaymentFormData {

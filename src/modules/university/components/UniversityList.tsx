@@ -205,13 +205,13 @@ export const UniversityList: React.FC<UniversityListProps> = ({
                   </td>
                   <td>
                     <div className="actions">
-                      <button
+                      {/* <button
                         className="action-btn view"
                         onClick={() => onView?.(university)}
                         title="مشاهده"
                       >
                         <Eye size={16} />
-                      </button>
+                      </button> */}
                       <button
                         className="action-btn edit"
                         onClick={() => onEdit?.(university)}

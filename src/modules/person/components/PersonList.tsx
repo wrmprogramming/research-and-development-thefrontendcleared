@@ -320,13 +320,13 @@ export const PersonList: React.FC<PersonListProps> = ({
                   </td>
                   <td>
                     <div className="actions">
-                      <button
+                      {/* <button
                         className="action-btn view"
                         onClick={() => onView?.(person)}
                         title="مشاهده"
                       >
                         <Eye size={16} />
-                      </button>
+                      </button> */}
                       <button
                         className="action-btn edit"
                         onClick={() => onEdit?.(person)}

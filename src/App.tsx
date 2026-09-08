@@ -28,6 +28,13 @@ import CityPage from '@pages/CityPage';
 import UniversityPage from '@pages/UniversityPage';
 import UniversityTypePage from '@pages/UniversityTypePage';
 import CommunicationPage from '@pages/CommunicationPage';
+import PaymentDetailsPage from './modules/payment/components/PaymentDetails';
+import ResearchDetailsPage from './modules/research/components/ResearchDetails';
+import RfpDetailsPage from './modules/rfp/components/RfpDetails';
+import ProposalDetailsPage from './modules/proposal/components/ProposalDetails';
+import ProgressDetailsPage from './modules/progress/components/ProgressDetails';
+import ResearchCommitteeDetailsPage from './modules/research-committee/components/ResearchCommitteeDetailsPage';
+import SteeringCommitteeDetailsPage from './modules/steering-committee/components/SteeringCommitteeDetailsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,18 +63,25 @@ function App() {
             <Route path="university-types" element={<UniversityTypePage />} />
             <Route path="person" element={<PersonPage />} />
             <Route path="research" element={<ResearchPage />} />
+            <Route path="/research/:id" element={<ResearchDetailsPage />} />
             <Route path="/rfp" element={<RfpPage />} />
+            <Route path="/rfp/:id" element={<RfpDetailsPage />} />
             <Route path="/project-subjects" element={<ProjectSubjectPage />} />
             <Route path="/proposal" element={<ProposalPage />} />
+            <Route path="/proposal/:id" element={<ProposalDetailsPage />} />
             <Route path="/contract" element={<ContractPage />} />
+            <Route path='/contract/:id' element={<ContractDetailsPage />} />
             <Route path="/payment-types" element={<PaymentTypePage />} />
             <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment/:id" element={<PaymentDetailsPage />} />
             <Route path="/progress" element={<ProgressPage />} />
-            <Route path='/contract/:id' element={<ContractDetailsPage />} />
+            <Route path="/progress/:id" element={<ProgressDetailsPage />} />
             <Route path="/contract-delays" element={<ContractDelayPage />} />
             <Route path="/settlements" element={<SettlementPage />} />
             <Route path="committees-research" element={<ResearchCommitteePage />} />
-            <Route path="committees-steering*" element={<SteeringCommitteePage />} />
+            <Route path="committees-research/:id" element={<ResearchCommitteeDetailsPage />} />
+            <Route path="committees-steering" element={<SteeringCommitteePage />} />
+            <Route path="committees-steering/:id" element={<SteeringCommitteeDetailsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
