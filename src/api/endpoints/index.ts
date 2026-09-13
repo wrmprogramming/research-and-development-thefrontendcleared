@@ -1,12 +1,60 @@
 // src/api/endpoints/index.ts
 
 export const API_ENDPOINTS = {
-  AUTH: {
+  // AUTH: {
+  //   LOGIN: '/auth/login/',
+  //   REGISTER: '/auth/register/',
+  //   REFRESH: '/auth/refresh/',
+  //   LOGOUT: '/auth/logout/',
+  //   PROFILE: '/auth/profile/',
+  // },
+   AUTH: {
     LOGIN: '/auth/login/',
     REGISTER: '/auth/register/',
-    REFRESH: '/auth/refresh/',
+    REFRESH: '/auth/token/refresh/',
     LOGOUT: '/auth/logout/',
-    PROFILE: '/auth/profile/',
+    VERIFY: '/auth/token/verify/',
+  },
+  
+  USER: {
+    BASE: '/users/',
+    DETAIL: (id: number) => `/users/${id}/`,
+    ME: '/users/me/',
+    UPDATE_ME: '/users/me/update/',
+    CHANGE_PASSWORD: '/users/change-password/',
+    LOGS: '/users/logs/',
+    USER_LOGS: (id: number) => `/users/${id}/logs/`,
+    TOGGLE_ACTIVE: (id: number) => `/users/${id}/toggle-active/`,
+    CHANGE_ROLE: (id: number) => `/users/${id}/change-role/`,
+    PERMISSIONS: (id: number) => `/users/${id}/permissions/`,
+    STATISTICS: '/users/statistics/',
+  },
+  
+  PERMISSION: {
+    BASE: '/permissions/',
+    DETAIL: (id: number) => `/permissions/${id}/`,
+    GROUPED: '/permissions/grouped/',
+    INITIALIZE: '/permissions/initialize/',
+  },
+  
+  ROLE_PERMISSION: {
+    BASE: '/role-permissions/',
+    BY_ROLE: (role: string) => `/role-permissions/by-role/${role}/`,
+    BULK_UPDATE: '/role-permissions/bulk-update/',
+    MATRIX: '/role-permissions/matrix/',
+  },
+  
+  USER_PERMISSION: {
+    BASE: '/user-permissions/',
+    BY_USER: (userId: number) => `/user-permissions/by-user/${userId}/`,
+    BULK_UPDATE: '/user-permissions/bulk-update/',
+  },
+  
+  ROLE: {
+    BASE: '/roles/',
+    DETAIL: (code: string) => `/roles/${code}/`,
+    DESCRIPTIONS: '/role-descriptions/',
+    DESCRIPTION_DETAIL: (id: number) => `/role-descriptions/${id}/`,
   },
    PERSON: {
     BASE: '/persons/',

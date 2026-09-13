@@ -41,6 +41,13 @@ import { Login } from './modules/auth/components/Login';
 import { PrivateRoute } from './components/layout/PrivateRoute';
 import { Register } from './modules/auth/components/Register';
 import ProfilePage from './pages/ProfilePage';
+import PermissionsPage from './pages/PermissionsPage';
+import RolesPage from './pages/RolesPage';
+import RolePermissionsPage from './pages/RolePermissionsPage';
+import UsersPage from './pages/UsersPage';
+import UserCreatePage from './pages/UserCreatePage';
+import UserDetailsPage from './pages/UserDetailsPage';
+import UserPermissionsPage from './pages/UserPermissionsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,28 +187,15 @@ function AppContent() {
             <Route path="committees-research/:id" element={<ResearchCommitteeDetailsPage />} />
             <Route path="committees-steering" element={<SteeringCommitteePage />} />
             <Route path="committees-steering/:id" element={<SteeringCommitteeDetailsPage />} />
-          {/* <Route index element={<Dashboard />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="province" element={<ProvincePage />} />
-          <Route path="city" element={<CityPage />} />
-          <Route path="communication" element={<CommunicationPage />} />
-          <Route path="company" element={<Company />} />
-          <Route path="university" element={<UniversityPage />} />
-          <Route path="university-types" element={<UniversityTypePage />} />
-          <Route path="person" element={<PersonPage />} />
-          <Route path="research" element={<ResearchPage />} />
-          <Route path="rfp" element={<RfpPage />} />
-          <Route path="project-subjects" element={<ProjectSubjectPage />} />
-          <Route path="proposal" element={<ProposalPage />} />
-          <Route path="contract" element={<ContractPage />} />
-          <Route path="payment-types" element={<PaymentTypePage />} />
-          <Route path="payment" element={<PaymentPage />} />
-          <Route path="progress" element={<ProgressPage />} />
-          <Route path="contract/:id" element={<ContractDetailsPage />} />
-          <Route path="contract-delays" element={<ContractDelayPage />} />
-          <Route path="settlements" element={<SettlementPage />} />
-          <Route path="committees-research" element={<ResearchCommitteePage />} />
-          <Route path="committees-steering/*" element={<SteeringCommitteePage />} /> */}
+            <Route path="permissions" element={<PermissionsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="roles/:role/permissions" element={<RolePermissionsPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="users/create" element={<UserCreatePage />} />
+            <Route path="users/:id" element={<UserDetailsPage />} />
+            <Route path="users/:id/permissions" element={<UserPermissionsPage />} />
+        
         </Route>
       </Route>
       
