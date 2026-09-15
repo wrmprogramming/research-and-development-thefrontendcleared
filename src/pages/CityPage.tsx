@@ -148,7 +148,7 @@ export const CityPage: React.FC = () => {
         .city-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .page-header {

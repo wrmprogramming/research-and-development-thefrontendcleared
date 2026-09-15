@@ -57,7 +57,7 @@ export const SteeringCommitteePage: React.FC = () => {
         .steering-committee-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .modal-overlay {

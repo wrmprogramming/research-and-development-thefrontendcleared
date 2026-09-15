@@ -71,7 +71,7 @@ export const UniversityTypePage: React.FC = () => {
         .university-type-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .page-header {

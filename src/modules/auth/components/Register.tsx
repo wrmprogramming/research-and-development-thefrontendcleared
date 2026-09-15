@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Eye, EyeOff, User, Lock, Mail, Phone, UserCheck } from 'lucide-react';
+import loginBg from '../../../assets/images/login-bg.jpg';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="register-page">
+    <div className="register-page" style={{ backgroundImage: `url(${loginBg})`}}>
       <div className="register-container">
         <div className="register-box">
           <div className="register-header">

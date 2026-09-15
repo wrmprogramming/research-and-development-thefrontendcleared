@@ -78,7 +78,7 @@ export const SettlementPage: React.FC<SettlementPageProps> = ({
         .settlement-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .page-header {

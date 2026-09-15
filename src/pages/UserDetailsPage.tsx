@@ -759,6 +759,7 @@ export const UserDetailsPage: React.FC = () => {
           padding: 24px;
           max-width: 1200px;
           margin: 0 auto;
+          background-color: transparent;
         }
 
         .page-header {

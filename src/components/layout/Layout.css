@@ -6,7 +6,7 @@
 
 .app {
   min-height: 100vh;
-  background: #f8fafc;
+  background: linear-gradient(180deg, #dde8f5 20%, #f5f7fa 100%);
   position: relative;
 }
 

@@ -48,13 +48,16 @@ export const ResearchPage: React.FC = () => {
             />
           </div>
         </div>
+        //          // background: #f8fafc;
+
       )}
 
       <style>{`
         .research-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
+
         }
 
         .modal-overlay {

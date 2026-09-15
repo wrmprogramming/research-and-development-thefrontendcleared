@@ -6,9 +6,9 @@
 /* ---------- 1. متغیرهای طراحی ---------- */
 :root {
   /* پالت رنگ‌های اصلی (بر اساس برند شما) */
-  --color-primary: #4f46e5;        /* ایندیگو - رنگ اصلی */
-  --color-primary-light: #818cf8;
-  --color-primary-dark: #3730a3;
+  --color-primary: #0072BB;        /* ایندیگو - رنگ اصلی */
+  --color-primary-light: #72D3FD;
+  --color-primary-dark: #013A87;
   --color-primary-bg: #eef2ff;
 
   --color-secondary: #059669;      /* زمردی - برای تایید و موفقیت */
@@ -43,7 +43,7 @@
   --color-white: #ffffff;
 
   /* فونت‌ها (با پشتیبانی از فارسی) */
-  --font-family-primary: 'IranSans', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-primary:'Vazir','IranSans', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
   /* سایه‌ها (شباهت به Tailwind) */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -86,11 +86,32 @@ html {
 
 body {
   font-family: var(--font-family-primary);
-  background-color: var(--color-gray-100);
+  background-color: var(--color-gray-400);
+  /* background-color: var(--color-gray-100); */
   color: var(--color-gray-700);
   line-height: 1.6;
   direction: rtl;
 }
+
+/* .background-image {
+  background-image: url('../images/thelayout-bg.jpg');
+  background-size: 100% 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  width: 100%;
+} */
+
+ /* .background-image {
+  background-image: url('../images/layout-bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  width: 100%;
+}  */
 
 /* ---------- 3. کلاس‌های کمکی (Utility Classes) ---------- */
 /* مانند Tailwind، اما سبک‌تر */

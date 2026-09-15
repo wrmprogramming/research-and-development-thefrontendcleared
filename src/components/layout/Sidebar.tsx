@@ -50,6 +50,22 @@ const navigation: NavItem[] = [
     icon: LayoutDashboard,
     requiredPermission: 'report.dashboard.view',
   },
+   {
+    icon: UserCircle,
+    name: 'پروفایل من',
+    href: '/profile',
+    // پروفایل نیاز به مجوز خاص نداره
+  },
+   {
+    icon: Shield,
+    name: 'مدیریت دسترسی',
+    requiredPermission: 'user.user.view',  // ← فقط کسایی که user.user.view دارن
+    children: [
+      { name: 'کاربران', href: '/users', requiredPermission: 'user.user.view' },
+      { name: 'نقش‌ها', href: '/roles', requiredPermission: 'user.user.view' },
+      { name: 'مجوزها', href: '/permissions', requiredPermission: 'user.user.view' },
+    ],
+  },
   {
     icon: Building2,
     name: 'مدیریت پایه',
@@ -103,22 +119,6 @@ const navigation: NavItem[] = [
       { name: 'کمیته تحقیقات', href: '/committees-research', requiredPermission: 'committee.research.view' },
       { name: 'کمیته راهبری', href: '/committees-steering', requiredPermission: 'committee.steering.view' },
     ],
-  },
-  {
-    icon: Shield,
-    name: 'مدیریت دسترسی',
-    requiredPermission: 'user.user.view',  // ← فقط کسایی که user.user.view دارن
-    children: [
-      { name: 'کاربران', href: '/users', requiredPermission: 'user.user.view' },
-      { name: 'نقش‌ها', href: '/roles', requiredPermission: 'user.user.view' },
-      { name: 'مجوزها', href: '/permissions', requiredPermission: 'user.user.view' },
-    ],
-  },
-  {
-    icon: UserCircle,
-    name: 'پروفایل من',
-    href: '/profile',
-    // پروفایل نیاز به مجوز خاص نداره
   },
 ];
 

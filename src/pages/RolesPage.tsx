@@ -185,6 +185,7 @@ export const RolesPage: React.FC = () => {
           padding: 24px;
           max-width: 1400px;
           margin: 0 auto;
+          background-color: transparent;
         }
 
         .page-header {

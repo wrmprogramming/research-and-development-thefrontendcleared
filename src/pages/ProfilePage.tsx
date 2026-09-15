@@ -293,6 +293,7 @@ export const ProfilePage: React.FC = () => {
           padding: 24px;
           max-width: 800px;
           margin: 0 auto;
+          background-color: transparent;
         }
 
         .profile-header {

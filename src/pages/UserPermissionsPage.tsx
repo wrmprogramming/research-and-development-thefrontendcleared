@@ -364,7 +364,7 @@ const UserPermissionsContent: React.FC<UserPermissionsContentProps> = ({
       {/* ========== ابزارها ========== */}
       {viewMode === 'custom' && (
         <div className="toolbar">
-          <div className="search-box">
+          <div className="search-input-wrapper ">
             <Search size={18} className="search-icon" />
             <input
               type="text"
@@ -699,6 +699,7 @@ export const UserPermissionsPage: React.FC = () => {
           max-width: 1200px;
           margin: 0 auto;
           padding-bottom: 100px;
+          background-color: transparent;
         }
 
         /* ===== Header ===== */
@@ -999,7 +1000,7 @@ export const UserPermissionsPage: React.FC = () => {
           flex-wrap: wrap;
         }
 
-        .search-box {
+        .search-input-wrapper {
           position: relative;
           flex: 1;
           min-width: 240px;
@@ -1014,7 +1015,7 @@ export const UserPermissionsPage: React.FC = () => {
           pointer-events: none;
         }
 
-        .search-box input {
+        .search-input-wrapper input {
           width: 100%;
           padding: 10px 42px 10px 16px;
           border: 1.5px solid #e5e7eb;
@@ -1025,7 +1026,7 @@ export const UserPermissionsPage: React.FC = () => {
           transition: all 0.2s;
         }
 
-        .search-box input:focus {
+        .search-input-wrapper  input:focus {
           border-color: #4f46e5;
           background: white;
           outline: none;

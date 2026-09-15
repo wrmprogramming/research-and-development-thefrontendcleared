@@ -912,7 +912,8 @@ const Dashboard: React.FC = () => {
         .dashboard-container {
           padding: 24px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
+
         }
 
         .dashboard-loading {

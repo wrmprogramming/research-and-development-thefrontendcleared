@@ -63,7 +63,7 @@ export const PaymentPage: React.FC = () => {
         .payment-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .modal-overlay {

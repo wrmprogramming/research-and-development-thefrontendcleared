@@ -52,7 +52,7 @@ export const PersonPage: React.FC = () => {
         .person-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         .modal-overlay {

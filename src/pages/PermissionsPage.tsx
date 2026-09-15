@@ -185,7 +185,7 @@ export const PermissionsPage: React.FC = () => {
 
       {/* ========== فیلترها ========== */}
       <div className="filters-bar">
-        <div className="search-box">
+        <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
           <input
             type="text"
@@ -344,6 +344,7 @@ export const PermissionsPage: React.FC = () => {
           padding: 24px;
           max-width: 1400px;
           margin: 0 auto;
+          background-color: transparent;
         }
 
         /* ===== Header ===== */
@@ -509,7 +510,7 @@ export const PermissionsPage: React.FC = () => {
           border: 1px solid #e9ecef;
         }
 
-        .search-box {
+        .search-input-wrapper {
           position: relative;
           flex: 1;
           min-width: 220px;
@@ -524,7 +525,7 @@ export const PermissionsPage: React.FC = () => {
           pointer-events: none;
         }
 
-        .search-box input {
+        .search-input-wrapper input {
           width: 100%;
           padding: 10px 42px 10px 16px;
           border: 1.5px solid #e5e7eb;
@@ -535,7 +536,7 @@ export const PermissionsPage: React.FC = () => {
           transition: all 0.2s;
         }
 
-        .search-box input:focus {
+        .search-input-wrapper input:focus {
           border-color: #4f46e5;
           background: white;
           outline: none;

@@ -6,7 +6,6 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { useState, useEffect } from 'react';
 import './Layout.css';
-
 export function Layout() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -56,6 +55,7 @@ export function Layout() {
   }, []);
 
   return (
+    //style={{ backgroundImage: `url(${layoutBg})`}}
     <div className="app">
       {/* ===== دایره‌های تزئینی پس‌زمینه ===== */}
       <div className="bg-circle-1"></div>

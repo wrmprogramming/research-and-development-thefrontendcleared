@@ -8,13 +8,14 @@ html {
 
 body {
   /* font-family: "Plus Jakarta Sans", sans-serif !important; */
-  font-family: 'IranSans', 'sans-serif', 'Plus Jakarta Sans';
+  font-family: 'Vazir', 'sans-serif', 'Plus Jakarta Sans';
   font-weight: normal;
   font-style: normal;
-  color: #5d657b;
+  color: #2a2c33;
   overflow-x: hidden;
   background: #f1f5f9;
 }
+
 
 * {
   margin: 0;

@@ -192,7 +192,7 @@ const totalCount = Array.isArray(data) ? data.length : (data?.count || 0);
 
       {/* ========== فیلترها ========== */}
       <div className="filters-bar">
-        <div className="search-box">
+        <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
           <input
             type="text"
@@ -509,6 +509,7 @@ const totalCount = Array.isArray(data) ? data.length : (data?.count || 0);
           padding: 24px;
           max-width: 1400px;
           margin: 0 auto;
+          background-color: transparent;
         }
 
         .page-header {
@@ -657,7 +658,7 @@ const totalCount = Array.isArray(data) ? data.length : (data?.count || 0);
           border: 1px solid #e9ecef;
         }
 
-        .search-box {
+        .search-input-wrapper {
           position: relative;
           flex: 1;
           min-width: 220px;
@@ -672,7 +673,7 @@ const totalCount = Array.isArray(data) ? data.length : (data?.count || 0);
           pointer-events: none;
         }
 
-        .search-box input {
+        .search-input-wrapper input {
           width: 100%;
           padding: 10px 42px 10px 16px;
           border: 1.5px solid #e5e7eb;
@@ -683,7 +684,7 @@ const totalCount = Array.isArray(data) ? data.length : (data?.count || 0);
           transition: all 0.2s;
         }
 
-        .search-box input:focus {
+        .search-input-wrapper:focus {
           border-color: #4f46e5;
           background: white;
           outline: none;

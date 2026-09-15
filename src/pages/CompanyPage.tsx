@@ -71,7 +71,7 @@ export const CompanyPage: React.FC = () => {
         .company-page {
           padding: 20px;
           min-height: 100vh;
-          background: #f8fafc;
+          background-color: transparent;
         }
 
         /* ========== Page Header ========== */

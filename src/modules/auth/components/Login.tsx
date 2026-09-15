@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Eye, EyeOff, LogIn, User, Lock } from 'lucide-react';
+import loginBg from '../../../assets/images/login-bg.jpg';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-page" style={{ backgroundImage: `url(${loginBg})`}}>
       <div className="login-container">
         <div className="login-box">
           <div className="login-header">
