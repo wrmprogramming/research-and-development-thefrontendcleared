@@ -48,6 +48,7 @@ import UsersPage from './pages/UsersPage';
 import UserCreatePage from './pages/UserCreatePage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import UserPermissionsPage from './pages/UserPermissionsPage';
+import CommunicationDetailsPage from './modules/communication/components/CommunicationDetailsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -163,6 +164,7 @@ function AppContent() {
             <Route path="province" element={<ProvincePage />} />
             <Route path="city" element={<CityPage />} />
             <Route path="communication" element={<CommunicationPage />} />
+            <Route path="communication/:id" element={<CommunicationDetailsPage />} />
             <Route path="company" element={<Company />} />
             <Route path="university" element={<UniversityPage />} />
             <Route path="university-types" element={<UniversityTypePage />} />

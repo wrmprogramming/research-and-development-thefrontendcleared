@@ -167,11 +167,11 @@ export const ResearchSelect: React.FC<ResearchSelectProps> = ({
       } ${error ? 'has-error' : ''}`}
       onKeyDown={handleKeyDown}
     >
-      {label && (
+      {/* {label && (
         <label className="select-label">
           {label} {required && <span className="required">*</span>}
         </label>
-      )}
+      )} */}
 
       <div className="select-control" onClick={toggleOpen}>
         <div className="select-value">

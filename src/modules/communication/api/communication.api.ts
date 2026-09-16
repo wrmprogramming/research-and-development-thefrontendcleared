@@ -136,34 +136,42 @@ class CommunicationApi {
     const formData = new FormData();
 
     // فیلدهای متنی
+    if (data.letter_number) formData.append('letter_number', data.letter_number);
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     formData.append('sender', data.sender);
     formData.append('receiver', data.receiver);
+    if (data.date !== undefined && data.date !== null) {
     formData.append('date', data.date);
-    if (data.send_date) formData.append('send_date', data.send_date);
-    if (data.receive_date) formData.append('receive_date', data.receive_date);
-
-    // کلیدهای خارجی
-    //  حذف contract_id
-    // if (data.contract_id) formData.append('contract', String(data.contract_id));
-    
-  
+  } else {
+    // ✅ اگر null است، رشته خالی ارسال کن تا بک‌اند مقدار را پاک کند
+    formData.append('date', '');
+  }
+  if (data.send_receive_date !== undefined && data.send_receive_date !== null) {
+    formData.append('send_receive_date', data.send_receive_date);
+  } else {
+    // ✅ اگر null است، رشته خالی ارسال کن تا بک‌اند مقدار را پاک کند
+    formData.append('send_receive_date', '');
+  }
     //  فقط research
     if (data.research_id) formData.append('research_id', String(data.research_id));
-
     // فایل‌ها
-    this.appendFile(formData, 'attachment', data.attachment);
-    this.appendFile(formData, 'letter_file', data.letter_file);
+    // this.appendFile(formData, 'attachment', data.attachment);
+    // this.appendFile(formData, 'letter_file', data.letter_file);
 
-    // لاگ برای دیباگ (در محیط توسعه)
-    // if (process.env.NODE_ENV === 'development') {
-    //   console.log('📤 CommunicationApi - FormData created');
-    //   for (const pair of formData.entries()) {
-    //     console.log(pair[0], ':', pair[1]);
-    //   }
-    // }
+    if (data.attachment instanceof File) {
+      formData.append('attachment', data.attachment);
+    } else if (data.attachment === null || data.attachment === '') {
+      // کاربر فایل رو حذف کرده → یه رشته خالی بفرست
+      formData.append('attachment', '');
+    }
+    // else: اگه string (URL قبلی) باشه → هیچی نفرست
 
+    if (data.letter_file instanceof File) {
+      formData.append('letter_file', data.letter_file);
+    } else if (data.letter_file === null || data.letter_file === '') {
+      formData.append('letter_file', '');
+    }
     return formData;
   }
 

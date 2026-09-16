@@ -45,11 +45,7 @@ export type ResearchStatus =
   | 'DRAFT'
   | 'IN_PROGRESS'
   | 'COMPLETED';
-  // | 'SUBMITTED'
-  // | 'UNDER_REVIEW'
-  // | 'APPROVED'
-  // | 'REJECTED'
-  // | 'CANCELED';
+ 
 
 /**
  * وضعیت‌های قرارداد

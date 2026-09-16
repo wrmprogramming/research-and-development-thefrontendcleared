@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Eye, EyeOff, LogIn, User, Lock } from 'lucide-react';
 import loginBg from '../../../assets/images/login-bg.jpg';
+import logo from '../../../assets/images/logo/logo.jpg';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -58,6 +59,9 @@ export const Login: React.FC = () => {
     <div className="login-page" style={{ backgroundImage: `url(${loginBg})`}}>
       <div className="login-container">
         <div className="login-box">
+           <div className="login-logo">
+              <img src={logo} alt="لوگو" className="logo-image" />
+            </div>
           <div className="login-header">
             <h1>ورود به سیستم</h1>
             <p>لطفاً اطلاعات خود را وارد کنید</p>
@@ -154,6 +158,34 @@ export const Login: React.FC = () => {
           padding: 40px 32px;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
+          .login-logo {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 24px;
+        }
+
+        .logo-image {
+          width: 240px;
+          height: 130px;
+          border-radius: 16px;
+          object-fit: contain;
+          background: #ffffff;
+          padding: 10px;
+          transition: transform 0.3s ease;
+        }
+
+        .logo-image:hover {
+          transform: scale(1.05);
+        }
+
+        @media (max-width: 480px) {
+          .logo-image {
+            width: 80px;
+            height: 80px;
+            padding: 8px;
+          }
+        }
 
         .login-header {
           text-align: center;
@@ -161,7 +193,7 @@ export const Login: React.FC = () => {
         }
 
         .login-header h1 {
-          font-size: 24px;
+          font-size: 20px;
           font-weight: 700;
           color: #1a1a2e;
           margin: 0 0 4px 0;

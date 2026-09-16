@@ -7,11 +7,11 @@ export const Footer = () => {
           <div className="col-md-6 order-last order-md-first">
             <div className="copyright text-center">
               <p className="credit-text">
-                <span className="design-label">طراحی و توسعه توسط</span>
+                <span className="design-label">طراحی و برنامه نویسی</span>
                 <span className="divider-dot">-</span>
-                <span className="developer-name">مهندس سیدمحمدحسین صادقی</span>
+                <span className="developer-name"> محمدحسین صادقی</span>
                 <span className="divider-dot">-</span>
-                <span className="job-title">کارشناس فناوری اطلاعات</span>
+                <span className="job-title">مهندس نرم افزار</span>
                 <span className="divider-dot"></span>
                 <span className="company-wrapper">
                   <span className="company-name">(واحد تحقیقات و هوشمندسازی</span>
