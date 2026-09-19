@@ -73,7 +73,6 @@ const navigation: NavItem[] = [
     children: [
       { name: 'استان', href: '/province', requiredPermission: 'base.province.view' },
       { name: 'شهر', href: '/city', requiredPermission: 'base.city.view' },
-      { name: 'مکاتبه', href: '/communication', requiredPermission: 'base.communication.view' },
       { name: 'شرکت', href: '/company', requiredPermission: 'base.company.view' },
       { name: 'نوع دانشگاه', href: '/university-types', requiredPermission: 'base.university.view' },
       { name: 'دانشگاه', href: '/university', requiredPermission: 'base.university.view' },
@@ -90,6 +89,7 @@ const navigation: NavItem[] = [
       { name: 'پژوهش', href: '/research', requiredPermission: 'research.research.view' },
       { name: 'RFP', href: '/rfp', requiredPermission: 'research.rfp.view' },
       { name: 'پروپوزال', href: '/proposal', requiredPermission: 'research.proposal.view' },
+      { name: 'مکاتبات', href: '/communication', requiredPermission: 'base.communication.view' },
     ],
   },
   {

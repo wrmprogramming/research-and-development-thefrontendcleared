@@ -1,7 +1,9 @@
 npm create vite@latest project-control -- --template react
 cd project-control
-
-
+npm install -D vitest @vitest/coverage-v8 @vitest/ui jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event msw --legacy-peer-deps
+npm install -D @testing-library/dom --legacy-peer-deps
+npm install -D @testing-library/user-event --legacy-peer-deps
+ npm run test:run
 اگر همه موارد بالا جواب نداد، این روش ساده را امتحان کنید:
 
 در CommunicationsManagement.tsx در handleSubmit:
