@@ -1,3 +1,4 @@
+//modern 3 PICKER_SCALE=0.75
 //modern 3
 // src/components/JalaliDatePicker.tsx
 import React, { useState, useRef, useEffect } from 'react';
@@ -67,6 +68,10 @@ const JalaliDatePicker: React.FC<JalaliDatePickerProps> = ({
   const yearDropdownRef = useRef<HTMLDivElement>(null);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
   const dayDropdownRef = useRef<HTMLDivElement>(null);
+
+  // ✅🆕 مقدار مقیاس - برای تغییر سایز فقط این عدد رو عوض کن
+  // مثلا: 0.75 = ۷۵٪، 0.85 = ۸۵٪، 1 = سایز اصلی
+  const PICKER_SCALE = 0.85;
 
   const monthNames = [
     'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
@@ -509,191 +514,210 @@ const JalaliDatePicker: React.FC<JalaliDatePickerProps> = ({
               setShowDayDropdown(false);
             }}
           />
-          <div 
-            className="position-absolute bg-white rounded-2 shadow-xl mt-1"
-            style={{ 
-              zIndex: 1050, 
-              width: '340px',
-              top: '100%',
-              left: 0,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.06)',
-              border: '1px solid #f1f3f5',
-              overflow: 'hidden',
-              animation: 'fadeInDown 0.2s ease-out'
-            }}
-          >
-            <style>{`
-              @keyframes fadeInDown {
-                from {
-                  opacity: 0;
-                  transform: translateY(-8px) scale(0.98);
+
+          {/* ============================================================ */}
+          {/* ✅🆕 WRAPPER جدید برای تغییر سایز                            */}
+          {/* این wrapper موقعیت و فضای پاپ‌آپ رو حفظ می‌کنه               */}
+          {/* height: 0 تا فضای اضافی اشغال نکنه                           */}
+          {/* pointerEvents: 'none' تا کلیک‌ها به عناصر زیرین برسه          */}
+          {/* ============================================================ */}
+          <div style={{ 
+            position: 'absolute', 
+            top: '100%', 
+            // left: 0,
+            right: 0,                    // ✅ برای RTL بهتره
+            width: '340px',        // 🆕 همون عرض اصلی تقویم
+            // height: 0,             // 🆕 ارتفاع صفر
+            zIndex: 1050,          // 🆕 z-index منتقل شده از div داخلی
+            pointerEvents: 'none'  // 🆕 کلیک‌ها از wrapper رد بشن
+          }}>
+            <div 
+              className="bg-white rounded-2 shadow-xl"
+              style={{ 
+                width: '340px',
+                // ============================================================ 
+                // ✅🆕 این ۳ خط برای کوچک کردن اضافه شدن
+                // ============================================================
+                transform: `scale(${PICKER_SCALE})`,  // 🆕 کوچک کردن به ۷۵٪
+                transformOrigin: 'top right',   // ✅ برای RTL بهتره
+                // transformOrigin: 'top left',          // 🆕 از گوشه بالا-چپ کوچک بشه
+                pointerEvents: 'auto',                // 🆕 برگرداندن کلیک‌پذیری به تقویم
+                // ============================================================
+                boxShadow: '0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.06)',
+                border: '1px solid #f1f3f5',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                animation: 'fadeInDown 0.2s ease-out'
+              }}
+            >
+              <style>{`
+               
+                @keyframes fadeInDown {
+                  from { opacity: 0; }
+                  to   { opacity: 1; }
                 }
-                to {
-                  opacity: 1;
-                  transform: translateY(0) scale(1);
+                .date-picker-scroll::-webkit-scrollbar {
+                  width: 4px;
                 }
-              }
-              .date-picker-scroll::-webkit-scrollbar {
-                width: 4px;
-              }
-              .date-picker-scroll::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 4px;
-              }
-              .date-picker-scroll::-webkit-scrollbar-thumb {
-                background: #d1d5db;
-                border-radius: 4px;
-              }
-              .date-picker-scroll::-webkit-scrollbar-thumb:hover {
-                background: #9ca3af;
-              }
-            `}</style>
+                .date-picker-scroll::-webkit-scrollbar-track {
+                  background: #f1f1f1;
+                  border-radius: 4px;
+                }
+                .date-picker-scroll::-webkit-scrollbar-thumb {
+                  background: #d1d5db;
+                  border-radius: 4px;
+                }
+                .date-picker-scroll::-webkit-scrollbar-thumb:hover {
+                  background: #9ca3af;
+                }
+              `}</style>
 
-            {/* هدر تقویم - کد کاملش مثل قبل */}
-            <div style={{ 
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              padding: '14px 16px',
-              color: 'white'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-                <button type="button" onClick={() => changeYear(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>«</button>
-                <button type="button" onClick={() => changeMonth(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>‹</button>
+              {/* هدر تقویم - کد کاملش مثل قبل */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                padding: '14px 16px',
+                color: 'white'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+                  <button type="button" onClick={() => changeYear(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>«</button>
+                  <button type="button" onClick={() => changeMonth(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>‹</button>
 
-                <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'center' }}>
-                  {/* انتخاب سال */}
-                  <div style={{ position: 'relative' }} ref={yearDropdownRef}>
-                    <button type="button" onClick={() => { setShowYearDropdown(!showYearDropdown); setShowMonthDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '60px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
-                      {currentYear}
-                      {showYearDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    {showYearDropdown && (
-                      <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '80px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
-                        {getYearOptions().map((year) => (
-                          <div key={year} onClick={() => handleYearSelect(year)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: year === currentYear ? '#eef2ff' : 'transparent', color: year === currentYear ? '#4f46e5' : '#374151', fontWeight: year === currentYear ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (year !== currentYear) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (year !== currentYear) { e.currentTarget.style.background = 'transparent'; } }}>{year}</div>
-                        ))}
-                      </div>
-                    )}
+                  <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'center' }}>
+                    {/* انتخاب سال */}
+                    <div style={{ position: 'relative' }} ref={yearDropdownRef}>
+                      <button type="button" onClick={() => { setShowYearDropdown(!showYearDropdown); setShowMonthDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '60px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+                        {currentYear}
+                        {showYearDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </button>
+                      {showYearDropdown && (
+                        <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '80px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+                          {getYearOptions().map((year) => (
+                            <div key={year} onClick={() => handleYearSelect(year)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: year === currentYear ? '#eef2ff' : 'transparent', color: year === currentYear ? '#4f46e5' : '#374151', fontWeight: year === currentYear ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (year !== currentYear) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (year !== currentYear) { e.currentTarget.style.background = 'transparent'; } }}>{year}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* انتخاب ماه */}
+                    <div style={{ position: 'relative' }} ref={monthDropdownRef}>
+                      <button type="button" onClick={() => { setShowMonthDropdown(!showMonthDropdown); setShowYearDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+                        {monthNames[currentMonth - 1]}
+                        {showMonthDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </button>
+                      {showMonthDropdown && (
+                        <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '100px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+                          {getMonthOptions().map((month) => (
+                            <div key={month.value} onClick={() => handleMonthSelect(month.value)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: month.value === currentMonth ? '#eef2ff' : 'transparent', color: month.value === currentMonth ? '#4f46e5' : '#374151', fontWeight: month.value === currentMonth ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = 'transparent'; } }}>{month.label}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* انتخاب روز */}
+                    <div style={{ position: 'relative' }} ref={dayDropdownRef}>
+                      <button type="button" onClick={() => { setShowDayDropdown(!showDayDropdown); setShowYearDropdown(false); setShowMonthDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '50px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+                        {currentDay}
+                        {showDayDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      </button>
+                      {showDayDropdown && (
+                        <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '60px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+                          {getDayOptions().map((day) => (
+                            <div key={day} onClick={() => handleDaySelect(day)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: day === currentDay ? '#eef2ff' : 'transparent', color: day === currentDay ? '#4f46e5' : '#374151', fontWeight: day === currentDay ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (day !== currentDay) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (day !== currentDay) { e.currentTarget.style.background = 'transparent'; } }}>{day}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* انتخاب ماه */}
-                  <div style={{ position: 'relative' }} ref={monthDropdownRef}>
-                    <button type="button" onClick={() => { setShowMonthDropdown(!showMonthDropdown); setShowYearDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
-                      {monthNames[currentMonth - 1]}
-                      {showMonthDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    {showMonthDropdown && (
-                      <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '100px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
-                        {getMonthOptions().map((month) => (
-                          <div key={month.value} onClick={() => handleMonthSelect(month.value)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: month.value === currentMonth ? '#eef2ff' : 'transparent', color: month.value === currentMonth ? '#4f46e5' : '#374151', fontWeight: month.value === currentMonth ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = 'transparent'; } }}>{month.label}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* انتخاب روز */}
-                  <div style={{ position: 'relative' }} ref={dayDropdownRef}>
-                    <button type="button" onClick={() => { setShowDayDropdown(!showDayDropdown); setShowYearDropdown(false); setShowMonthDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '50px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
-                      {currentDay}
-                      {showDayDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    {showDayDropdown && (
-                      <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '60px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
-                        {getDayOptions().map((day) => (
-                          <div key={day} onClick={() => handleDaySelect(day)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: day === currentDay ? '#eef2ff' : 'transparent', color: day === currentDay ? '#4f46e5' : '#374151', fontWeight: day === currentDay ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (day !== currentDay) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (day !== currentDay) { e.currentTarget.style.background = 'transparent'; } }}>{day}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button type="button" onClick={() => changeMonth(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>›</button>
+                  <button type="button" onClick={() => changeYear(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>»</button>
                 </div>
-
-                <button type="button" onClick={() => changeMonth(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>›</button>
-                <button type="button" onClick={() => changeYear(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>»</button>
               </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafbfc' }}>
-              {weekDays.map((day, idx) => (
-                <div key={idx} style={{ textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#9ca3af', padding: '6px 0', letterSpacing: '0.5px' }}>{day}</div>
-              ))}
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', gap: '2px' }}>
-              {getDays().map((day, idx) => (
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafbfc' }}>
+                {weekDays.map((day, idx) => (
+                  <div key={idx} style={{ textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#9ca3af', padding: '6px 0', letterSpacing: '0.5px' }}>{day}</div>
+                ))}
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', gap: '2px' }}>
+                {getDays().map((day, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => day && handleDateSelect(day)}
+                    disabled={!day}
+                    style={{
+                      textAlign: 'center',
+                      padding: '8px 0',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSelected(day) ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : isToday(day) ? '#eef2ff' : 'transparent',
+                      color: isSelected(day) ? 'white' : isToday(day) ? '#4f46e5' : '#374151',
+                      fontWeight: isSelected(day) ? '600' : isToday(day) ? '600' : '400',
+                      cursor: day ? 'pointer' : 'default',
+                      opacity: day ? 1 : 0.3,
+                      fontSize: '14px',
+                      transition: 'all 0.15s ease',
+                      fontFamily: 'inherit',
+                      boxShadow: isSelected(day) ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (day && !isSelected(day) && !isToday(day)) {
+                        e.currentTarget.style.background = '#f3f4f6';
+                        e.currentTarget.style.transform = 'scale(1.04)';
+                      }
+                      if (day && isToday(day) && !isSelected(day)) {
+                        e.currentTarget.style.background = '#e0e7ff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (day && !isSelected(day) && !isToday(day)) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }
+                      if (day && isToday(day) && !isSelected(day)) {
+                        e.currentTarget.style.background = '#eef2ff';
+                      }
+                    }}
+                  >
+                    {day || ''}
+                    {isToday(day) && !isSelected(day) && (
+                      <span style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4f46e5' }} />
+                    )}
+                  </button>
+                ))}
+              </div>
+              
+              <div style={{ padding: '10px', borderTop: '1px solid #f3f4f6', textAlign: 'center', background: '#fafbfc', borderRadius: '0 0 12px 12px' }}>
                 <button
-                  key={idx}
-                  onClick={() => day && handleDateSelect(day)}
-                  disabled={!day}
+                  type="button"
+                  onClick={goToToday}
                   style={{
-                    textAlign: 'center',
-                    padding: '8px 0',
-                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                     border: 'none',
-                    background: isSelected(day) ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : isToday(day) ? '#eef2ff' : 'transparent',
-                    color: isSelected(day) ? 'white' : isToday(day) ? '#4f46e5' : '#374151',
-                    fontWeight: isSelected(day) ? '600' : isToday(day) ? '600' : '400',
-                    cursor: day ? 'pointer' : 'default',
-                    opacity: day ? 1 : 0.3,
-                    fontSize: '14px',
-                    transition: 'all 0.15s ease',
-                    fontFamily: 'inherit',
-                    boxShadow: isSelected(day) ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none',
-                    position: 'relative'
+                    borderRadius: '20px',
+                    padding: '7px 28px',
+                    color: 'white',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease',
+                    boxShadow: '0 2px 12px rgba(79, 70, 229, 0.3)',
+                    fontWeight: '500',
+                    letterSpacing: '0.3px'
                   }}
                   onMouseEnter={(e) => {
-                    if (day && !isSelected(day) && !isToday(day)) {
-                      e.currentTarget.style.background = '#f3f4f6';
-                      e.currentTarget.style.transform = 'scale(1.04)';
-                    }
-                    if (day && isToday(day) && !isSelected(day)) {
-                      e.currentTarget.style.background = '#e0e7ff';
-                    }
+                    e.currentTarget.style.transform = 'scale(1.04)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(79, 70, 229, 0.4)';
                   }}
                   onMouseLeave={(e) => {
-                    if (day && !isSelected(day) && !isToday(day)) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }
-                    if (day && isToday(day) && !isSelected(day)) {
-                      e.currentTarget.style.background = '#eef2ff';
-                    }
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 2px 12px rgba(79, 70, 229, 0.3)';
                   }}
                 >
-                  {day || ''}
-                  {isToday(day) && !isSelected(day) && (
-                    <span style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4f46e5' }} />
-                  )}
+                  امروز
                 </button>
-              ))}
-            </div>
-            
-            <div style={{ padding: '10px', borderTop: '1px solid #f3f4f6', textAlign: 'center', background: '#fafbfc', borderRadius: '0 0 12px 12px' }}>
-              <button
-                type="button"
-                onClick={goToToday}
-                style={{
-                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                  border: 'none',
-                  borderRadius: '20px',
-                  padding: '7px 28px',
-                  color: 'white',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  boxShadow: '0 2px 12px rgba(79, 70, 229, 0.3)',
-                  fontWeight: '500',
-                  letterSpacing: '0.3px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.04)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(79, 70, 229, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(79, 70, 229, 0.3)';
-                }}
-              >
-                امروز
-              </button>
+              </div>
             </div>
           </div>
         </>
@@ -703,6 +727,712 @@ const JalaliDatePicker: React.FC<JalaliDatePickerProps> = ({
 };
 
 export default JalaliDatePicker;
+
+// //modern 3
+// // src/components/JalaliDatePicker.tsx
+// import React, { useState, useRef, useEffect } from 'react';
+// import { ChevronDown, ChevronUp } from 'lucide-react';
+// import moment from 'moment-jalaali';
+
+// interface JalaliDatePickerProps {
+//   value?: string | null;
+//   onChange: (date: string | null) => void;
+//   placeholder?: string;
+//   required?: boolean;
+//   label?: string;
+//   error?: string;
+//   disabled?: boolean;
+//   className?: string;
+// }
+
+// moment.loadPersian({ dialect: 'persian-modern' });
+
+// const LEAP_YEARS = [
+//   1210, 1214, 1218, 1222, 1226, 1230, 1234, 1238, 1243,
+//   1247, 1251, 1255, 1259, 1263, 1267, 1271, 1276,
+//   1280, 1284, 1288, 1292, 1296, 1300, 1304, 1309,
+//   1313, 1317, 1321, 1325, 1329, 1333, 1337, 1342,
+//   1346, 1350, 1354, 1358, 1362, 1366, 1370, 1375,
+//   1379, 1383, 1387, 1391, 1395, 1399, 1403, 1408,
+//   1412, 1416, 1420, 1424, 1428, 1432, 1436, 1441,
+//   1445, 1449, 1453, 1457, 1461, 1465, 1469, 1474,
+//   1478, 1482, 1486, 1490, 1494, 1498
+// ];
+
+// const getJalaliMonthDays = (year: number, month: number): number => {
+//   const daysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+//   if (month === 12) {
+//     return LEAP_YEARS.includes(year) ? 30 : 29;
+//   }
+//   return daysInMonth[month - 1];
+// };
+
+// const getFirstDayOfMonth = (year: number, month: number): number => {
+//   const date = moment(`${year}/${month}/01`, 'jYYYY/jMM/jDD');
+//   let day = date.day();
+//   day = (day + 1) % 7;
+//   return day;
+// };
+
+// const JalaliDatePicker: React.FC<JalaliDatePickerProps> = ({
+//   value,
+//   onChange,
+//   placeholder = '1402/12/25',
+//   required = false,
+//   label,
+//   error,
+//   disabled = false,
+//   className = '',
+// }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+//   const [currentYear, setCurrentYear] = useState(moment().jYear());
+//   const [currentMonth, setCurrentMonth] = useState(moment().jMonth() + 1);
+//   const [currentDay, setCurrentDay] = useState(moment().jDate());
+//   const [inputValue, setInputValue] = useState('');
+//   const [isTyping, setIsTyping] = useState(false);
+//   const [showYearDropdown, setShowYearDropdown] = useState(false);
+//   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+//   const [showDayDropdown, setShowDayDropdown] = useState(false);
+//   const pickerRef = useRef<HTMLDivElement>(null);
+//   const yearDropdownRef = useRef<HTMLDivElement>(null);
+//   const monthDropdownRef = useRef<HTMLDivElement>(null);
+//   const dayDropdownRef = useRef<HTMLDivElement>(null);
+
+//   const monthNames = [
+//     'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+//     'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+//   ];
+
+//   const weekDays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+
+//   const formatJalaliDate = (year: number, month: number, day: number): string => {
+//     return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+//   };
+
+//   // ✅ ساده و درست
+//   const parseJalaliDate = (dateStr: string): { year: number; month: number; day: number } | null => {
+//     if (!dateStr) return null;
+    
+//     const clean = dateStr.replace(/[^0-9/]/g, '');
+//     const parts = clean.split('/');
+    
+//     if (parts.length !== 3) return null;
+    
+//     const year = parseInt(parts[0]);
+//     const month = parseInt(parts[1]);
+//     const day = parseInt(parts[2]);
+    
+//     if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+//     if (year < 1300 || year > 1500) return null;
+//     if (month < 1 || month > 12) return null;
+//     if (day < 1 || day > 31) return null;
+    
+//     const formatted = `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+//     const m = moment(formatted, 'jYYYY/jMM/jDD');
+//     if (!m.isValid()) return null;
+    
+//     return { year, month, day };
+//   };
+
+//   const toJalaliFormat = (dateStr: string | null | undefined): string | null => {
+//     if (!dateStr) return null;
+//     const parsed = parseJalaliDate(dateStr);
+//     if (parsed) {
+//       return formatJalaliDate(parsed.year, parsed.month, parsed.day);
+//     }
+//     if (dateStr.includes('-')) {
+//       try {
+//         const parts = dateStr.split('-');
+//         if (parts.length === 3) {
+//           const year = parseInt(parts[0]);
+//           const month = parseInt(parts[1]);
+//           const day = parseInt(parts[2]);
+//           if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+//             const m = moment(`${year}/${month}/${day}`, 'YYYY/MM/DD');
+//             if (m.isValid()) {
+//               return formatJalaliDate(m.jYear(), m.jMonth() + 1, m.jDate());
+//             }
+//           }
+//         }
+//       } catch (e) {
+//         console.warn('Error parsing date:', dateStr, e);
+//       }
+//     }
+//     return null;
+//   };
+
+//   useEffect(() => {
+//     if (!value || value === '' || value === 'null' || value === 'undefined') {
+//       if (!isTyping) {
+//         setInputValue('');
+//       }
+//       return;
+//     }
+//     if (value && !isTyping) {
+//       const formatted = toJalaliFormat(value);
+//       if (formatted) {
+//         const parsed = parseJalaliDate(formatted);
+//         if (parsed) {
+//           setInputValue(formatted);
+//           setCurrentYear(parsed.year);
+//           setCurrentMonth(parsed.month);
+//           setCurrentDay(parsed.day);
+//           return;
+//         }
+//       }
+//       setInputValue('');
+//     } else if (!value && !isTyping) {
+//       setInputValue('');
+//     }
+//   }, [value, isTyping]);
+
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+//         setIsOpen(false);
+//         setShowYearDropdown(false);
+//         setShowMonthDropdown(false);
+//         setShowDayDropdown(false);
+//       }
+//       if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target as Node)) {
+//         setShowYearDropdown(false);
+//       }
+//       if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target as Node)) {
+//         setShowMonthDropdown(false);
+//       }
+//       if (dayDropdownRef.current && !dayDropdownRef.current.contains(event.target as Node)) {
+//         setShowDayDropdown(false);
+//       }
+//     };
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => document.removeEventListener('mousedown', handleClickOutside);
+//   }, []);
+
+//   const getDays = () => {
+//     const daysInMonth = getJalaliMonthDays(currentYear, currentMonth);
+//     const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
+//     const days = [];
+    
+//     for (let i = 0; i < firstDay; i++) {
+//       days.push(null);
+//     }
+//     for (let i = 1; i <= daysInMonth; i++) {
+//       days.push(i);
+//     }
+//     return days;
+//   };
+
+//   const handleDateSelect = (day: number) => {
+//     const jalaliStr = formatJalaliDate(currentYear, currentMonth, day);
+//     onChange(jalaliStr);
+//     setInputValue(jalaliStr);
+//     setCurrentDay(day);
+//     setIsOpen(false);
+//     setIsTyping(false);
+//   };
+
+//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     let val = e.target.value;
+//     setIsTyping(true);
+    
+//     val = val.replace(/[^0-9/]/g, '');
+//     if (val.length > 10) {
+//       val = val.slice(0, 10);
+//     }
+    
+//     const numbers = val.replace(/\//g, '');
+//     if (numbers.length >= 5 && !val.includes('/')) {
+//       val = `${numbers.slice(0, 4)}/${numbers.slice(4)}`;
+//     } else if (numbers.length >= 7 && val.split('/').length === 2) {
+//       const parts = val.split('/');
+//       if (parts[1].length >= 2) {
+//         val = `${parts[0]}/${parts[1].slice(0, 2)}/${numbers.slice(6)}`;
+//       }
+//     }
+    
+//     setInputValue(val);
+    
+//     if (val.length >= 4) {
+//       const parts = val.split('/');
+      
+//       if (parts.length >= 1) {
+//         const year = parseInt(parts[0]);
+//         if (!isNaN(year) && year >= 1300 && year <= 1500) {
+//           setCurrentYear(year);
+//         }
+//       }
+      
+//       if (parts.length >= 2) {
+//         const month = parseInt(parts[1]);
+//         if (!isNaN(month) && month >= 1 && month <= 12) {
+//           setCurrentMonth(month);
+//         }
+//       }
+      
+//       if (parts.length >= 3) {
+//         const day = parseInt(parts[2]);
+//         if (!isNaN(day) && day >= 1 && day <= 31) {
+//           setCurrentDay(day);
+//         }
+//       }
+//     }
+//   };
+
+//   const handleInputBlur = () => {
+//     setIsTyping(false);
+    
+//     if (!inputValue) {
+//       onChange(null);
+//       return;
+//     }
+
+//     console.log('📝 Input value on blur:', inputValue);
+    
+//     const parsed = parseJalaliDate(inputValue);
+//     console.log('📝 Parsed result:', parsed);
+//     if (parsed) {
+//       const formatted = formatJalaliDate(parsed.year, parsed.month, parsed.day);
+//       console.log('📝 Formatted date:', formatted);
+//       onChange(formatted);
+//       setInputValue(formatted);
+//       setCurrentYear(parsed.year);
+//       setCurrentMonth(parsed.month);
+//       setCurrentDay(parsed.day);
+//       return;
+//     }
+    
+//     if (value) {
+//       const formatted = toJalaliFormat(value);
+//       if (formatted) {
+//         setInputValue(formatted);
+//       } else {
+//         setInputValue('');
+//         onChange(null);
+//       }
+//     } else {
+//       setInputValue('');
+//       onChange(null);
+//     }
+//   };
+
+//   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+//     if (e.key === 'Enter') {
+//       handleInputBlur();
+//       setIsOpen(false);
+//     }
+//   };
+
+//   const handleInputClick = () => {
+//     if (!disabled) {
+//       setIsOpen(true);
+//     }
+//   };
+
+//   const changeMonth = (delta: number) => {
+//     let newMonth = currentMonth + delta;
+//     let newYear = currentYear;
+    
+//     if (newMonth < 1) {
+//       newMonth = 12;
+//       newYear--;
+//     } else if (newMonth > 12) {
+//       newMonth = 1;
+//       newYear++;
+//     }
+//     setCurrentMonth(newMonth);
+//     setCurrentYear(newYear);
+//   };
+
+//   const changeYear = (delta: number) => {
+//     setCurrentYear(prev => prev + delta);
+//   };
+
+//   const clearDate = () => {
+//     onChange(null);
+//     setInputValue('');
+//     setIsOpen(false);
+//     setIsTyping(false);
+//   };
+
+//   const isToday = (day: number) => {
+//     const today = moment();
+//     const todayYear = today.jYear();
+//     const todayMonth = today.jMonth() + 1;
+//     const todayDay = today.jDate();
+    
+//     return todayYear === currentYear && todayMonth === currentMonth && todayDay === day;
+//   };
+
+//   const isSelected = (day: number) => {
+//     if (inputValue && inputValue.length >= 4) {
+//       const parts = inputValue.split('/');
+      
+//       let year = null;
+//       if (parts.length >= 1) {
+//         year = parseInt(parts[0]);
+//         if (isNaN(year) || year < 1300 || year > 1500) return false;
+//       }
+      
+//       let month = null;
+//       if (parts.length >= 2) {
+//         month = parseInt(parts[1]);
+//         if (isNaN(month) || month < 1 || month > 12) return false;
+//       }
+      
+//       let dayFromInput = null;
+//       if (parts.length >= 3) {
+//         dayFromInput = parseInt(parts[2]);
+//         if (isNaN(dayFromInput) || dayFromInput < 1 || dayFromInput > 31) return false;
+//       }
+      
+//       if (year === currentYear && month === currentMonth && dayFromInput !== null) {
+//         return dayFromInput === day;
+//       }
+      
+//       if (year === currentYear && month === currentMonth && dayFromInput === null) {
+//         return false;
+//       }
+//     }
+//     return false;
+//   };
+
+//   const goToToday = () => {
+//     const today = moment();
+//     const year = today.jYear();
+//     const month = today.jMonth() + 1;
+//     const day = today.jDate();
+//     const jalaliStr = formatJalaliDate(year, month, day);
+    
+//     onChange(jalaliStr);
+//     setInputValue(jalaliStr);
+//     setCurrentYear(year);
+//     setCurrentMonth(month);
+//     setCurrentDay(day);
+//     setIsOpen(false);
+//     setIsTyping(false);
+//   };
+
+//   const handleYearSelect = (year: number) => {
+//     setCurrentYear(year);
+//     setShowYearDropdown(false);
+//   };
+
+//   const handleMonthSelect = (month: number) => {
+//     setCurrentMonth(month);
+//     setShowMonthDropdown(false);
+//   };
+
+//   const handleDaySelect = (day: number) => {
+//     const jalaliStr = formatJalaliDate(currentYear, currentMonth, day);
+//     onChange(jalaliStr);
+//     setInputValue(jalaliStr);
+//     setCurrentDay(day);
+//     setShowDayDropdown(false);
+//     setIsOpen(false);
+//   };
+
+//   const getYearOptions = () => {
+//     const years = [];
+//     for (let i = 1300; i <= 1500; i++) {
+//       years.push(i);
+//     }
+//     return years;
+//   };
+
+//   const getMonthOptions = () => {
+//     return monthNames.map((name, index) => ({
+//       value: index + 1,
+//       label: name
+//     }));
+//   };
+
+//   const getDayOptions = () => {
+//     const daysInMonth = getJalaliMonthDays(currentYear, currentMonth);
+//     const days = [];
+//     for (let i = 1; i <= daysInMonth; i++) {
+//       days.push(i);
+//     }
+//     return days;
+//   };
+
+//   const displayValue = inputValue;
+
+//   return (
+//     <div className={`position-relative ${className}`} ref={pickerRef} style={{ direction: 'rtl' }}>
+//       {label && (
+//         <label className="form-label fw-semibold mb-1" style={{ 
+//           fontSize: '13px', 
+//           color: '#374151',
+//           display: 'block',
+//           marginBottom: '4px'
+//         }}>
+//           {label} {required && <span style={{ color: '#ef4444' }}>*</span>}
+//         </label>
+//       )}
+      
+//       <div className="position-relative">
+//         <input
+//           type="text"
+//           className={`form-control ${error ? 'is-invalid' : ''}`}
+//           placeholder={placeholder}
+//           value={displayValue}
+//           onChange={handleInputChange}
+//           onBlur={handleInputBlur}
+//           onKeyDown={handleInputKeyDown}
+//           onClick={handleInputClick}
+//           disabled={disabled}
+//           required={required}
+//           style={{ 
+//             padding: '10px 14px',
+//             direction: 'ltr',
+//             borderRadius: '10px',
+//             border: error ? '2px solid #ef4444' : '2px solid #e5e7eb',
+//             width: '100%',
+//             fontFamily: 'monospace',
+//             fontSize: '14px',
+//             backgroundColor: disabled ? '#f9fafb' : 'white',
+//             cursor: disabled ? 'not-allowed' : 'pointer',
+//             transition: 'all 0.2s ease',
+//             boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+//             outline: 'none',
+//             color: '#1f2937'
+//           }}
+//           onFocus={(e) => {
+//             if (!disabled) {
+//               e.currentTarget.style.borderColor = '#6366f1';
+//               e.currentTarget.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.12)';
+//             }
+//           }}
+//           onBlur={(e) => {
+//             if (!disabled && !error) {
+//               e.currentTarget.style.borderColor = '#e5e7eb';
+//               e.currentTarget.style.boxShadow = 'none';
+//             }
+//           }}
+//         />
+//       </div>
+      
+//       {error && (
+//         <div className="text-danger small mt-1" style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+//           {error}
+//         </div>
+//       )}
+
+//       {isOpen && !disabled && (
+//         <>
+//           <div 
+//             style={{ 
+//               position: 'fixed', 
+//               top: 0, 
+//               left: 0, 
+//               right: 0, 
+//               bottom: 0, 
+//               zIndex: 1040,
+//               backgroundColor: 'rgba(0,0,0,0.08)',
+//               backdropFilter: 'blur(2px)',
+//               transition: 'all 0.3s ease'
+//             }}
+//             onClick={() => {
+//               setIsOpen(false);
+//               setShowYearDropdown(false);
+//               setShowMonthDropdown(false);
+//               setShowDayDropdown(false);
+//             }}
+//           />
+//           <div 
+//             className="position-absolute bg-white rounded-2 shadow-xl mt-1"
+//             style={{ 
+//               zIndex: 1050, 
+//               width: '340px',
+//               top: '100%',
+//               left: 0,
+//               boxShadow: '0 20px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.06)',
+//               border: '1px solid #f1f3f5',
+//               overflow: 'hidden',
+//               animation: 'fadeInDown 0.2s ease-out'
+//             }}
+//           >
+//             <style>{`
+//               @keyframes fadeInDown {
+//                 from {
+//                   opacity: 0;
+//                   transform: translateY(-8px) scale(0.98);
+//                 }
+//                 to {
+//                   opacity: 1;
+//                   transform: translateY(0) scale(1);
+//                 }
+//               }
+//               .date-picker-scroll::-webkit-scrollbar {
+//                 width: 4px;
+//               }
+//               .date-picker-scroll::-webkit-scrollbar-track {
+//                 background: #f1f1f1;
+//                 border-radius: 4px;
+//               }
+//               .date-picker-scroll::-webkit-scrollbar-thumb {
+//                 background: #d1d5db;
+//                 border-radius: 4px;
+//               }
+//               .date-picker-scroll::-webkit-scrollbar-thumb:hover {
+//                 background: #9ca3af;
+//               }
+//             `}</style>
+
+//             {/* هدر تقویم - کد کاملش مثل قبل */}
+//             <div style={{ 
+//               background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+//               padding: '14px 16px',
+//               color: 'white'
+//             }}>
+//               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+//                 <button type="button" onClick={() => changeYear(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>«</button>
+//                 <button type="button" onClick={() => changeMonth(-1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>‹</button>
+
+//                 <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'center' }}>
+//                   {/* انتخاب سال */}
+//                   <div style={{ position: 'relative' }} ref={yearDropdownRef}>
+//                     <button type="button" onClick={() => { setShowYearDropdown(!showYearDropdown); setShowMonthDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '60px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+//                       {currentYear}
+//                       {showYearDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+//                     </button>
+//                     {showYearDropdown && (
+//                       <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '80px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+//                         {getYearOptions().map((year) => (
+//                           <div key={year} onClick={() => handleYearSelect(year)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: year === currentYear ? '#eef2ff' : 'transparent', color: year === currentYear ? '#4f46e5' : '#374151', fontWeight: year === currentYear ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (year !== currentYear) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (year !== currentYear) { e.currentTarget.style.background = 'transparent'; } }}>{year}</div>
+//                         ))}
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* انتخاب ماه */}
+//                   <div style={{ position: 'relative' }} ref={monthDropdownRef}>
+//                     <button type="button" onClick={() => { setShowMonthDropdown(!showMonthDropdown); setShowYearDropdown(false); setShowDayDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 14px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '70px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+//                       {monthNames[currentMonth - 1]}
+//                       {showMonthDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+//                     </button>
+//                     {showMonthDropdown && (
+//                       <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '100px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+//                         {getMonthOptions().map((month) => (
+//                           <div key={month.value} onClick={() => handleMonthSelect(month.value)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: month.value === currentMonth ? '#eef2ff' : 'transparent', color: month.value === currentMonth ? '#4f46e5' : '#374151', fontWeight: month.value === currentMonth ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (month.value !== currentMonth) { e.currentTarget.style.background = 'transparent'; } }}>{month.label}</div>
+//                         ))}
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   {/* انتخاب روز */}
+//                   <div style={{ position: 'relative' }} ref={dayDropdownRef}>
+//                     <button type="button" onClick={() => { setShowDayDropdown(!showDayDropdown); setShowYearDropdown(false); setShowMonthDropdown(false); }} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', color: 'white', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', minWidth: '50px', justifyContent: 'center', transition: 'all 0.2s', backdropFilter: 'blur(4px)', height: '32px' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}>
+//                       {currentDay}
+//                       {showDayDropdown ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+//                     </button>
+//                     {showDayDropdown && (
+//                       <div className="date-picker-scroll" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', maxHeight: '200px', overflowY: 'auto', zIndex: 1060, minWidth: '60px', color: '#1f2937', border: '1px solid #f1f3f5' }}>
+//                         {getDayOptions().map((day) => (
+//                           <div key={day} onClick={() => handleDaySelect(day)} style={{ padding: '8px 18px', cursor: 'pointer', fontSize: '14px', textAlign: 'center', background: day === currentDay ? '#eef2ff' : 'transparent', color: day === currentDay ? '#4f46e5' : '#374151', fontWeight: day === currentDay ? '600' : '400', transition: 'all 0.15s', borderBottom: '1px solid #f3f4f6' }} onMouseEnter={(e) => { if (day !== currentDay) { e.currentTarget.style.background = '#f9fafb'; } }} onMouseLeave={(e) => { if (day !== currentDay) { e.currentTarget.style.background = 'transparent'; } }}>{day}</div>
+//                         ))}
+//                       </div>
+//                     )}
+//                   </div>
+//                 </div>
+
+//                 <button type="button" onClick={() => changeMonth(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>›</button>
+//                 <button type="button" onClick={() => changeYear(1)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', fontSize: '16px', fontWeight: 'bold', backdropFilter: 'blur(4px)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'scale(1)'; }}>»</button>
+//               </div>
+//             </div>
+            
+//             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#fafbfc' }}>
+//               {weekDays.map((day, idx) => (
+//                 <div key={idx} style={{ textAlign: 'center', fontSize: '11px', fontWeight: '600', color: '#9ca3af', padding: '6px 0', letterSpacing: '0.5px' }}>{day}</div>
+//               ))}
+//             </div>
+            
+//             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 10px', gap: '2px' }}>
+//               {getDays().map((day, idx) => (
+//                 <button
+//                   key={idx}
+//                   onClick={() => day && handleDateSelect(day)}
+//                   disabled={!day}
+//                   style={{
+//                     textAlign: 'center',
+//                     padding: '8px 0',
+//                     borderRadius: '8px',
+//                     border: 'none',
+//                     background: isSelected(day) ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : isToday(day) ? '#eef2ff' : 'transparent',
+//                     color: isSelected(day) ? 'white' : isToday(day) ? '#4f46e5' : '#374151',
+//                     fontWeight: isSelected(day) ? '600' : isToday(day) ? '600' : '400',
+//                     cursor: day ? 'pointer' : 'default',
+//                     opacity: day ? 1 : 0.3,
+//                     fontSize: '14px',
+//                     transition: 'all 0.15s ease',
+//                     fontFamily: 'inherit',
+//                     boxShadow: isSelected(day) ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none',
+//                     position: 'relative'
+//                   }}
+//                   onMouseEnter={(e) => {
+//                     if (day && !isSelected(day) && !isToday(day)) {
+//                       e.currentTarget.style.background = '#f3f4f6';
+//                       e.currentTarget.style.transform = 'scale(1.04)';
+//                     }
+//                     if (day && isToday(day) && !isSelected(day)) {
+//                       e.currentTarget.style.background = '#e0e7ff';
+//                     }
+//                   }}
+//                   onMouseLeave={(e) => {
+//                     if (day && !isSelected(day) && !isToday(day)) {
+//                       e.currentTarget.style.background = 'transparent';
+//                       e.currentTarget.style.transform = 'scale(1)';
+//                     }
+//                     if (day && isToday(day) && !isSelected(day)) {
+//                       e.currentTarget.style.background = '#eef2ff';
+//                     }
+//                   }}
+//                 >
+//                   {day || ''}
+//                   {isToday(day) && !isSelected(day) && (
+//                     <span style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4f46e5' }} />
+//                   )}
+//                 </button>
+//               ))}
+//             </div>
+            
+//             <div style={{ padding: '10px', borderTop: '1px solid #f3f4f6', textAlign: 'center', background: '#fafbfc', borderRadius: '0 0 12px 12px' }}>
+//               <button
+//                 type="button"
+//                 onClick={goToToday}
+//                 style={{
+//                   background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+//                   border: 'none',
+//                   borderRadius: '20px',
+//                   padding: '7px 28px',
+//                   color: 'white',
+//                   fontSize: '13px',
+//                   cursor: 'pointer',
+//                   transition: 'all 0.25s ease',
+//                   boxShadow: '0 2px 12px rgba(79, 70, 229, 0.3)',
+//                   fontWeight: '500',
+//                   letterSpacing: '0.3px'
+//                 }}
+//                 onMouseEnter={(e) => {
+//                   e.currentTarget.style.transform = 'scale(1.04)';
+//                   e.currentTarget.style.boxShadow = '0 4px 20px rgba(79, 70, 229, 0.4)';
+//                 }}
+//                 onMouseLeave={(e) => {
+//                   e.currentTarget.style.transform = 'scale(1)';
+//                   e.currentTarget.style.boxShadow = '0 2px 12px rgba(79, 70, 229, 0.3)';
+//                 }}
+//               >
+//                 امروز
+//               </button>
+//             </div>
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default JalaliDatePicker;
 
 
 // //modern 1
