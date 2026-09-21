@@ -9,17 +9,10 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react';
-
+import { toPersianNumber } from '../../../utils/formatter.utils';
 interface ResearchCommitteeStatsProps {
   className?: string;
 }
-
-// ========== تابع تبدیل اعداد به فارسی ==========
-const toPersianNumber = (num: number): string => {
-  if (num === undefined || num === null) return '۰';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return num.toString().replace(/\d/g, (d) => persianDigits[parseInt(d)]);
-};
 
 // ========== تابع کمکی برای محاسبه ماکزیمم ==========
 const getMaxValue = (obj: Record<string, any>): number => {
@@ -125,7 +118,7 @@ export const ResearchCommitteeStats: React.FC<ResearchCommitteeStatsProps> = ({ 
 
   // ✅ بررسی اینکه آیا سال خاصی انتخاب شده
   const isYearSelected = selectedYear !== 'all';
-  const yearLabel = isYearSelected ? `سال ${selectedYear}` : 'کل';
+  const yearLabel = isYearSelected ? `سال ${toPersianNumber(selectedYear as number)}` : 'کل';
 
   // ========== کارت‌های آمار اصلی ==========
   const statItems = [
@@ -185,7 +178,7 @@ export const ResearchCommitteeStats: React.FC<ResearchCommitteeStatsProps> = ({ 
             <option value="all">همه سال‌ها</option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
-                {year}
+                {toPersianNumber(year)}
               </option>
             ))}
           </select>

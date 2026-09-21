@@ -48,7 +48,6 @@ async getAll(params?: ProgressFilters): Promise<PaginatedResponse<Progress>> {
       registered_date: data.registered_date,
       notes: data.notes || '',
       contract_id: data.contract_id,
-      steering_committee: data.steering_committee_id || null,
     };
      if (data.registered_date !== undefined && data.registered_date !== null) {
     payload.registered_date = data.registered_date;
@@ -67,7 +66,6 @@ async getAll(params?: ProgressFilters): Promise<PaginatedResponse<Progress>> {
       registered_date: data.registered_date,
       notes: data.notes || '',
       contract_id: data.contract_id,
-      steering_committee: data.steering_committee_id || null,
     };
        if (data.registered_date !== undefined && data.registered_date !== null) {
     payload.registered_date = data.registered_date;

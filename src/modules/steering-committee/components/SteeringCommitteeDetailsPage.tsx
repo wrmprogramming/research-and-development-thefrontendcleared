@@ -812,6 +812,648 @@ ${approvementsText}
       )}
 
       <style>{`
+  .steering-committee-details-page {
+    padding: 24px;
+    min-height: 100vh;
+    background: #f8fafc;
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e9ecef;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding: 20px 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  .btn-back:hover {
+    background: #f8fafc;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .title-icon {
+    color: #4f46e5;
+  }
+
+  .header-title h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .committee-subject-header {
+    font-size: 14px;
+    color: #6b7280;
+    display: block;
+  }
+
+  /* ✅ تغییر: date-badge از سبز به بنفش روشن */
+  .date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #eef2ff;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4f46e5;
+  }
+
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .action-bar-left, .action-bar-right {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .action-btn:hover {
+    background: #f8fafc;
+  }
+
+  /* ✅ تغییر: primary از سبز به بنفش */
+  .action-btn.primary {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+  }
+
+  .action-btn.primary:hover {
+    background: #4338ca;
+  }
+
+  .action-btn.danger {
+    color: #dc2626;
+    border-color: #fecaca;
+  }
+
+  .action-btn.danger:hover {
+    background: #fee2e2;
+  }
+
+  .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .export-wrapper {
+    position: relative;
+  }
+
+  .export-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    z-index: 100;
+    overflow: hidden;
+    padding: 8px 0;
+  }
+
+  .export-group-label {
+    padding: 8px 16px 4px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 4px;
+  }
+
+  .export-group-label:not(:first-child) {
+    margin-top: 8px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+  }
+
+  .export-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    text-align: right;
+    font-weight: 500;
+  }
+
+  .export-menu button:hover {
+    background: #f3f4f6;
+  }
+
+  .export-menu button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .export-menu button .export-desc {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 400;
+    margin-right: auto;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .modal-content {
+      margin: 10px;
+      max-width: 100%;
+    }
+  }
+
+  .details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .summary-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .summary-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-label {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .info-section {
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+  }
+
+  .info-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 12px 0;
+  }
+
+  .info-row-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13px;
+  }
+
+  .info-row-detail:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    color: #6b7280;
+  }
+
+  .info-value {
+    font-weight: 500;
+    color: #1a1a2e;
+  }
+
+  .info-value.highlight {
+    color: #4f46e5;
+    font-weight: 600;
+  }
+
+  .description-text {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.8;
+    margin: 0;
+    white-space: pre-wrap;
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .description-text.expanded {
+    max-height: none;
+  }
+
+  .toggle-description {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    background: none;
+    border: none;
+    color: #4f46e5;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  /* ✅ تغییر: hover از سبز روشن به بنفش روشن */
+  .toggle-description:hover {
+    background: #eef2ff;
+  }
+
+  .files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ✅ تغییر: file-item از سبز به بنفش روشن */
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+  }
+
+  .file-item .file-icon {
+    color: #4f46e5;
+  }
+
+  .file-item .file-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a2e;
+    flex: 1;
+  }
+
+  .file-item .file-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .file-item .file-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #4f46e5;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  /* ✅ تغییر: hover از سبز به بنفش روشن */
+  .file-item .file-action:hover {
+    background: #e0e7ff;
+    color: #4338ca;
+  }
+
+  .approvements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ✅ تغییر اصلی: approvement-item از سبز به بنفش روشن */
+  .approvement-item {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+
+  .approvement-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .approvement-number {
+    font-weight: 700;
+    color: #4f46e5;
+    font-size: 13px;
+    min-width: 24px;
+  }
+
+  .approvement-description {
+    font-size: 14px;
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
+  .approvement-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .approvement-responsible,
+  .approvement-deadline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .text-muted {
+    color: #9ca3af;
+  }
+
+  /* ✅ تغییر: meta از سبز به بنفش خیلی روشن */
+  .info-section.meta {
+    background: #f8fafc;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+  }
+
+  .meta-label {
+    color: #6b7280;
+  }
+
+  .meta-value {
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
+  @media (max-width: 1024px) {
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .steering-committee-details-page {
+      padding: 12px;
+    }
+
+    .details-header {
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .header-left {
+      width: 100%;
+    }
+
+    .header-title h1 {
+      font-size: 18px;
+    }
+
+    .action-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .action-bar-left, .action-bar-right {
+      justify-content: center;
+    }
+
+    .summary-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .export-menu {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      border-radius: 16px 16px 0 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      min-width: unset;
+      width: 100%;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+      padding: 12px 0 20px 0;
+    }
+
+    .export-menu button {
+      padding: 12px 20px;
+      font-size: 15px;
+    }
+
+    .export-group-label {
+      padding: 12px 20px 4px 20px;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media print {
+    .steering-committee-details-page {
+      background: white;
+      padding: 20px;
+    }
+
+    .action-bar, .btn-back, .export-wrapper {
+      display: none !important;
+    }
+
+    .details-header {
+      box-shadow: none;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .info-section {
+      border: 1px solid #e9ecef;
+      break-inside: avoid;
+    }
+
+    .summary-card {
+      border: 1px solid #e9ecef;
+    }
+  }
+`}</style>
+
+      {/* <style>{`
         .steering-committee-details-page {
           padding: 24px;
           min-height: 100vh;
@@ -831,7 +1473,7 @@ ${approvementsText}
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #059669;
+          border-top-color: #4f46e5;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }
@@ -899,7 +1541,7 @@ ${approvementsText}
         }
 
         .title-icon {
-          color: #059669;
+          color: #4f46e5;
         }
 
         .header-title h1 {
@@ -923,7 +1565,7 @@ ${approvementsText}
           background: #d1fae5;
           border-radius: 8px;
           font-size: 14px;
-          color: #059669;
+          color: #4f46e5;
         }
 
         .action-bar {
@@ -965,13 +1607,13 @@ ${approvementsText}
         }
 
         .action-btn.primary {
-          background: #059669;
+          background: #4f46e5;
           color: white;
-          border-color: #059669;
+          border-color: #4f46e5;
         }
 
         .action-btn.primary:hover {
-          background: #047857;
+          background: #4f46e5;
         }
 
         .action-btn.danger {
@@ -1192,7 +1834,7 @@ ${approvementsText}
         }
 
         .info-value.highlight {
-          color: #059669;
+          color: #4f46e5;
           font-weight: 600;
         }
 
@@ -1218,7 +1860,7 @@ ${approvementsText}
           margin-top: 8px;
           background: none;
           border: none;
-          color: #059669;
+          color: #4f46e5;
           font-size: 13px;
           cursor: pointer;
           padding: 4px 8px;
@@ -1247,7 +1889,7 @@ ${approvementsText}
         }
 
         .file-item .file-icon {
-          color: #059669;
+          color: #4f46e5;
         }
 
         .file-item .file-label {
@@ -1271,7 +1913,7 @@ ${approvementsText}
           border: none;
           border-radius: 6px;
           background: transparent;
-          color: #059669;
+          color: #4f46e5;
           cursor: pointer;
           transition: all 0.2s;
           text-decoration: none;
@@ -1279,7 +1921,7 @@ ${approvementsText}
 
         .file-item .file-action:hover {
           background: #a7f3d0;
-          color: #047857;
+          color: #4f46e5;
         }
 
         .approvements-list {
@@ -1304,7 +1946,7 @@ ${approvementsText}
 
         .approvement-number {
           font-weight: 700;
-          color: #059669;
+          color: #4f46e5;
           font-size: 13px;
           min-width: 24px;
         }
@@ -1444,7 +2086,7 @@ ${approvementsText}
             border: 1px solid #a7f3d0;
           }
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 };

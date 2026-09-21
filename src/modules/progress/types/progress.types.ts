@@ -26,21 +26,25 @@ export interface ProgressFormData {
   notes?: string;
   physical_progress_percentage: number;
   registered_date: string;
-  steering_committee_id?: number | null;
   contract_id: number;
 }
 
 export interface ProgressFilters {
   contract?: number;
-  search?: string;           //  جستجو در شماره قرارداد، موضوع و توضیحات
-  from_date?: string;        //  فیلتر تاریخ از
-  to_date?: string;          // فیلتر تاریخ تا
-  min_percentage?: number;   //  حداقل درصد
-  max_percentage?: number;   // حداکثر درصد
+  search?: string;
+  // ✅ بازه تاریخ
+  from_date?: string;
+  to_date?: string;
+  // ✅ بازه درصد
+  min_percentage?: number;
+  max_percentage?: number;
+  // ✅ فیلتر سال
+  year?: number;
+  // صفحه‌بندی
   page?: number;
   page_size?: number;
+  ordering?: string;
 }
-
 
 
 export interface YearStat {

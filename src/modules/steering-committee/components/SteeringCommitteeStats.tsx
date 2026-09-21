@@ -10,17 +10,10 @@ import {
   CheckCircle,
   GraduationCap,
 } from 'lucide-react';
-
+import { toPersianNumber } from '../../../utils/formatter.utils';
 interface SteeringCommitteeStatsProps {
   className?: string;
 }
-
-// ========== تابع تبدیل اعداد به فارسی ==========
-const toPersianNumber = (num: number): string => {
-  if (num === undefined || num === null) return '۰';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return num.toString().replace(/\d/g, (d) => persianDigits[parseInt(d)]);
-};
 
 // ========== تابع کمکی برای محاسبه ماکزیمم ==========
 const getMaxValue = (obj: Record<string, any>): number => {
@@ -126,7 +119,7 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
 
   // ✅ بررسی اینکه آیا سال خاصی انتخاب شده
   const isYearSelected = selectedYear !== 'all';
-  const yearLabel = isYearSelected ? `سال ${selectedYear}` : 'کل';
+  const yearLabel = isYearSelected ? `سال ${toPersianNumber(selectedYear as number)}` : 'کل';
 
   // ========== کارت‌های آمار اصلی ==========
   const statItems = [
@@ -135,8 +128,8 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
       label: `تعداد کل جلسات (${yearLabel})`,
       value: toPersianNumber(yearStatsData?.totalCommittees || 0),
       icon: FileText,
-      color: '#059669',
-      bgColor: '#d1fae5',
+      color: '#4f46e5',
+      bgColor: '#eef2ff',
     },
     {
       key: 'total_approvements',
@@ -189,7 +182,7 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
             <option value="all">همه سال‌ها</option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
-                {year}
+                {toPersianNumber(year)}
               </option>
             ))}
           </select>
@@ -353,10 +346,7 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
           transition: all 0.2s;
         }
 
-        .year-selector-wrapper:focus-within {
-          border-color: #059669;
-          box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-        }
+       .year-selector-wrapper:focus-within { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
 
         .year-selector-icon {
           color: #6b7280;
@@ -490,12 +480,12 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
         }
 
         .year-stat-item.selected .year-label {
-          color: #059669;
+          color: #4f46e5;
           font-weight: 700;
         }
 
         .year-stat-item.selected .year-stat-count {
-          color: #059669;
+          color: #4f46e5;
           font-weight: 700;
         }
 
@@ -535,7 +525,7 @@ export const SteeringCommitteeStats: React.FC<SteeringCommitteeStatsProps> = ({ 
           height: 100%;
           border-radius: 4px;
           transition: width 0.6s ease;
-          background: #059669;
+          background: #4f46e5;
         }
 
         .research-count {

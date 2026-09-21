@@ -21,6 +21,7 @@ import {
   type Column,
   type FilterField,
 } from '../../../components/common';
+import { toPersianNumber } from '../../../utils/formatter.utils';
 
 interface CommunicationListProps {
   onEdit?: (item: Communication) => void;
@@ -195,7 +196,7 @@ export const CommunicationList: React.FC<CommunicationListProps> = ({
       render: (item) => (
         <div className="date-cell">
           <Calendar size={14} />
-          {item.date}
+          {toPersianNumber(item.date)}
         </div>
       ),
     },

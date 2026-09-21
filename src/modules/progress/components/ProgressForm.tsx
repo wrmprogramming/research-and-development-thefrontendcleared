@@ -28,7 +28,6 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     registered_date: '',
     notes: '',
     contract_id: contractId || 0,
-    steering_committee_id: null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -56,7 +55,6 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
         registered_date: initialData.registered_date || '',
         notes: initialData.notes || '',
         contract_id: contractIdValue,
-        steering_committee_id: initialData.steering_committee || null,
       });
       setSubmitAttempted(false);
       setErrors({});
@@ -149,19 +147,12 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   try {
-    
-    // ✅ ارسال با نام 'contract' (نه contract_id)
-    const submitData = {
+    const submitData: ProgressFormData = {
       physical_progress_percentage: formData.physical_progress_percentage,
-      registered_date: formData.registered_date,
+      registered_date: jalaliToGregorian(formatJalaliDate(formData.registered_date)) || '',
       notes: formData.notes || '',
-      contract_id: formData.contract_id,  // ← اینجا contract رو میفرستیم
-      steering_committee: formData.steering_committee_id || null,
+      contract_id: formData.contract_id,
     };
-    submitData.registered_date = jalaliToGregorian(formatJalaliDate(submitData.registered_date));
-    
-
-    console.log('📤 Submitting progress data:', submitData);
 
     if (isEditing && initialData) {
       await update(initialData.id, submitData);
@@ -173,7 +164,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     console.error('Submit error:', error);
     if (error.response?.data) {
       const serverErrors = error.response.data;
-      console.log('Server errors:', serverErrors);
       if (typeof serverErrors === 'object') {
         Object.keys(serverErrors).forEach((field) => {
           const errorMessage = Array.isArray(serverErrors[field])
@@ -186,6 +176,63 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   }
 };
+
+// const handleSubmit = async (e: React.FormEvent) => {
+//   e.preventDefault();
+//   setSubmitAttempted(true);
+
+//   const allTouched: Record<string, boolean> = {};
+//   Object.keys(formData).forEach(key => {
+//     allTouched[key] = true;
+//   });
+//   setTouched(allTouched);
+
+//   if (!validate()) {
+//     const firstError = document.querySelector('.is-invalid');
+//     if (firstError) {
+//       firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+//     }
+//     return;
+//   }
+
+//   try {
+    
+//     // ✅ ارسال با نام 'contract' (نه contract_id)
+//     const submitData = {
+//       physical_progress_percentage: formData.physical_progress_percentage,
+//       registered_date: formData.registered_date,
+//       notes: formData.notes || '',
+//       contract_id: formData.contract_id,  // ← اینجا contract رو میفرستیم
+//       steering_committee: formData.steering_committee_id || null,
+//     };
+//     submitData.registered_date = jalaliToGregorian(formatJalaliDate(submitData.registered_date));
+    
+
+//     console.log('📤 Submitting progress data:', submitData);
+
+//     if (isEditing && initialData) {
+//       await update(initialData.id, submitData);
+//     } else {
+//       await create(submitData);
+//     }
+//     onSuccess?.();
+//   } catch (error: any) {
+//     console.error('Submit error:', error);
+//     if (error.response?.data) {
+//       const serverErrors = error.response.data;
+//       console.log('Server errors:', serverErrors);
+//       if (typeof serverErrors === 'object') {
+//         Object.keys(serverErrors).forEach((field) => {
+//           const errorMessage = Array.isArray(serverErrors[field])
+//             ? serverErrors[field][0]
+//             : serverErrors[field];
+//           setErrors((prev) => ({ ...prev, [field]: errorMessage }));
+//           setTouched((prev) => ({ ...prev, [field]: true }));
+//         });
+//       }
+//     }
+//   }
+// };
  
 
   // ========== Render ==========

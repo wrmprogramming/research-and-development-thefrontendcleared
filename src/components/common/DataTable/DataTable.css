@@ -85,3 +85,19 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+.data-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.data-table thead th.sortable:hover {
+  color: #4f46e5;
+}
+
+.data-table thead th .sort-icon {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 11px;
+  color: #4f46e5;
+}

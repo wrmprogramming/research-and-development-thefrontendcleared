@@ -32,21 +32,41 @@ export const toEnglishNumber = (str: string): string => {
   return str.replace(/[۰-۹]/g, (d) => persianDigits[d] || d);
 };
 
+
 /**
- * فرمت کردن عدد با جداکننده هزارگان
+ * فرمت کردن عدد با جداکننده هزارگان + تبدیل به اعداد فارسی
+ * مثال: 1000000 → "۱,۰۰۰,۰۰۰"
  */
 export const formatNumber = (num: number): string => {
-  if (num === undefined || num === null) return '';
-  return num.toLocaleString('fa-IR');
+  if (num === undefined || num === null) return '۰';
+  const withCommas = formatNumberWithCommas(num);
+  return toPersianNumber(withCommas);
 };
 
 /**
- * فرمت کردن مبلغ به ریال
+ * فرمت کردن مبلغ به ریال با اعداد فارسی
+ * مثال: 1000000 → "۱,۰۰۰,۰۰۰ ریال"
  */
 export const formatCurrency = (amount: number): string => {
   if (amount === undefined || amount === null) return '۰ ریال';
   return `${formatNumber(amount)} ریال`;
 };
+
+// /**
+//  * فرمت کردن عدد با جداکننده هزارگان
+//  */
+// export const formatNumber = (num: number): string => {
+//   if (num === undefined || num === null) return '';
+//   return num.toLocaleString('fa-IR');
+// };
+
+// /**
+//  * فرمت کردن مبلغ به ریال
+//  */
+// export const formatCurrency = (amount: number): string => {
+//   if (amount === undefined || amount === null) return '۰ ریال';
+//   return `${formatNumber(amount)} ریال`;
+// };
 
 /**
  * کوتاه کردن متن
@@ -72,3 +92,13 @@ export const toLowerCase = (str: string): string => {
   if (!str) return '';
   return str.toLowerCase();
 };
+
+/**
+ * فرمت کردن عدد با جداکننده هزارگان (انگلیسی)
+ * مثال: 1000000 → "1,000,000"
+ */
+export const formatNumberWithCommas = (num: number): string => {
+  if (num === undefined || num === null) return '0';
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+

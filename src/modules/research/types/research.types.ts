@@ -117,18 +117,41 @@ export interface ResearchStats {
 // 8. مدل فیلترهای جستجو
 // ============================================================
 // این اینترفیس برای ارسال پارامترهای کوئری به API استفاده می‌شود
+// export interface ResearchFilters {
+//   status?: ResearchStatus;                       // فیلتر بر اساس وضعیت
+//   year?: number;                                 // فیلتر بر اساس سال
+//   primary_researcher?: number;                   // فیلتر بر اساس پژوهشگر
+//   company?: number;                              // فیلتر بر اساس شرکت
+//   university?: number;                           // فیلتر بر اساس دانشگاه
+//   search?: string;                               // جستجوی متنی
+//   is_active?: boolean;                           // فیلتر فعال بودن
+//   affiliation_type?: 'UNIVERSITY' | 'COMPANY';   // فیلتر نوع همکار
+//   page?: number;                                 // شماره صفحه
+//   page_size?: number;                            // تعداد آیتم در هر صفحه
+//   ordering?: string;                             // مرتب‌سازی (مثلاً '-created_at')
+// }
+
 export interface ResearchFilters {
-  status?: ResearchStatus;                       // فیلتر بر اساس وضعیت
-  year?: number;                                 // فیلتر بر اساس سال
-  primary_researcher?: number;                   // فیلتر بر اساس پژوهشگر
-  company?: number;                              // فیلتر بر اساس شرکت
-  university?: number;                           // فیلتر بر اساس دانشگاه
-  search?: string;                               // جستجوی متنی
-  is_active?: boolean;                           // فیلتر فعال بودن
-  affiliation_type?: 'UNIVERSITY' | 'COMPANY';   // فیلتر نوع همکار
-  page?: number;                                 // شماره صفحه
-  page_size?: number;                            // تعداد آیتم در هر صفحه
-  ordering?: string;                             // مرتب‌سازی (مثلاً '-created_at')
+  status?: ResearchStatus;
+  year?: number;
+  primary_researcher?: number;
+  company?: number;
+  university?: number;
+  search?: string;
+  is_active?: boolean;
+  affiliation_type?: 'UNIVERSITY' | 'COMPANY';
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+  //  فیلترهای جدید
+  budget_min?: number;
+  budget_max?: number;
+  approve_date_from?: string;
+  approve_date_to?: string;
+  start_date_from?: string;
+  start_date_to?: string;
+  end_date_from?: string;
+  end_date_to?: string;
 }
 
 // ============================================================

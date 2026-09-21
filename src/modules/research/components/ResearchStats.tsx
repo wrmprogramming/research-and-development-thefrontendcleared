@@ -17,7 +17,7 @@ import {
   Calendar,
   Loader2
 } from 'lucide-react';
-
+import { toPersianNumber } from '../../../utils/formatter.utils';
 // ============================================================
 // 2. پراپ‌های کامپوننت
 // ============================================================
@@ -149,39 +149,75 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
 
   // --- 3.11. کارت‌های آمار اصلی ---
   const statItems = [
-    {
-      key: 'total',
-      label: isYearSelected ? `پژوهش‌های سال ${selectedYear}` : 'کل پژوهش‌ها',
-      value: totalCount,
-      icon: FileText,
-      color: '#4f46e5',
-      bgColor: '#eef2ff',
-    },
-    {
-      key: 'draft',
-      label: 'پیش‌نویس',
-      value: draftCount,
-      icon: FileText,
-      color: '#6b7280',
-      bgColor: '#f3f4f6',
-    },
-    {
-      key: 'active',
-      label: 'در حال اجرا',
-      value: activeCount,
-      icon: Clock,
-      color: '#2563eb',
-      bgColor: '#dbeafe',
-    },
-    {
-      key: 'completed',
-      label: 'خاتمه یافته',
-      value: completedCount,
-      icon: CheckCircle,
-      color: '#059669',
-      bgColor: '#d1fae5',
-    },
-  ];
+  {
+    key: 'total',
+    label: isYearSelected
+      ? `پژوهش‌های سال ${toPersianNumber(selectedYear)}`
+      : 'کل پژوهش‌ها',
+    value: toPersianNumber(totalCount),
+    icon: FileText,
+    color: '#4f46e5',
+    bgColor: '#eef2ff',
+  },
+  {
+    key: 'draft',
+    label: 'پیش‌نویس',
+    value: toPersianNumber(draftCount),
+    icon: FileText,
+    color: '#6b7280',
+    bgColor: '#f3f4f6',
+  },
+  {
+    key: 'active',
+    label: 'در حال اجرا',
+    value: toPersianNumber(activeCount),
+    icon: Clock,
+    color: '#2563eb',
+    bgColor: '#dbeafe',
+  },
+  {
+    key: 'completed',
+    label: 'خاتمه یافته',
+    value: toPersianNumber(completedCount),
+    icon: CheckCircle,
+    color: '#059669',
+    bgColor: '#d1fae5',
+  },
+];
+  // const statItems = [
+  //   {
+  //     key: 'total',
+  //     label: isYearSelected ? `پژوهش‌های سال ${selectedYear}` : 'کل پژوهش‌ها',
+  //     value: totalCount,
+  //     icon: FileText,
+  //     color: '#4f46e5',
+  //     bgColor: '#eef2ff',
+  //   },
+  //   {
+  //     key: 'draft',
+  //     label: 'پیش‌نویس',
+  //     value: draftCount,
+  //     icon: FileText,
+  //     color: '#6b7280',
+  //     bgColor: '#f3f4f6',
+  //   },
+  //   {
+  //     key: 'active',
+  //     label: 'در حال اجرا',
+  //     value: activeCount,
+  //     icon: Clock,
+  //     color: '#2563eb',
+  //     bgColor: '#dbeafe',
+  //   },
+  //   {
+  //     key: 'completed',
+  //     label: 'خاتمه یافته',
+  //     value: completedCount,
+  //     icon: CheckCircle,
+  //     color: '#059669',
+  //     bgColor: '#d1fae5',
+  //   },
+  // ];
 
   return (
     <div className={`research-stats ${className}`}>
@@ -211,7 +247,7 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
             <option value="all">همه سال‌ها</option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
-                {year}
+                {toPersianNumber(year)}
               </option>
             ))}
           </select>
@@ -280,7 +316,8 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
                     }}
                   />
                 </div>
-                <span className="status-stat-count">{count}</span>
+                <span className="status-stat-count">{toPersianNumber(count)}</span>
+                {/* <span className="status-stat-count">{count}</span> */}
               </div>
             );
           })}
@@ -311,7 +348,8 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
                     onClick={() => handleYearChange(Number(year))}
                     style={{ cursor: 'pointer' }}
                   >
-                    <span className="year-label">{year}</span>
+                    {/* <span className="year-label">{year}</span> */}
+                    <span className="year-label">{toPersianNumber(year)}</span>
                     <div className="year-stat-bar">
                       <div
                         className="year-stat-fill"
@@ -321,7 +359,8 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
                         }}
                       />
                     </div>
-                    <span className="year-stat-count">{count}</span>
+                    <span className="year-stat-count">{toPersianNumber(count)}</span>
+                    {/* <span className="year-stat-count">{count}</span> */}
                   </div>
                 );
               })}
@@ -341,7 +380,10 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
     <h4 className="stats-detail-title">
       <Building2 size={18} />
       توزیع بر اساس نوع همکار
-      {isYearSelected && <span className="year-badge">سال {selectedYear}</span>}
+      {/* {isYearSelected && <span className="year-badge">سال {selectedYear}</span>} */}
+      {isYearSelected && (
+      <span className="year-badge">سال {toPersianNumber(selectedYear)}</span>
+    )}
     </h4>
     <div className="affiliation-stats">
       {isYearSelected && yearlyStats?.affiliation ? (
@@ -371,7 +413,8 @@ export const ResearchStats: React.FC<ResearchStatsProps> = ({ className = '' }) 
                     }}
                   />
                 </div>
-                <span className="affiliation-stat-count">{count}</span>
+                <span className="affiliation-stat-count">{toPersianNumber(count)}</span>
+                {/* <span className="affiliation-stat-count">{count}</span> */}
               </div>
             );
           })}

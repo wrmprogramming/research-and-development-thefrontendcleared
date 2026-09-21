@@ -63,7 +63,12 @@ export interface ProposalFilters {
   rfp?: number;
   university?: number;
   project_subject?: number;
-  year?: number; // 🔥 فیلتر بر اساس سال
+  year?: number; //  فیلتر بر اساس سال
+  primary_researcher?: number;        // پژوهشگر اصلی
+  execution_time_min?: number;        // مدت اجرا از (ماه)
+  execution_time_max?: number;        // مدت اجرا تا (ماه)
+  approved_date_from?: string;        // تاریخ تصویب از (شمسی)
+  approved_date_to?: string;          // تاریخ تصویب تا (شمسی)
   page?: number;
   page_size?: number;
   ordering?: string;
@@ -89,7 +94,7 @@ export interface ProposalStats {
     year: number;
     count: number;
     winner_count: number;
-  }[]; // 🔥 آمار بر اساس سال
+  }[]; //  آمار بر اساس سال
 }
 
 // ========== Related Types ==========

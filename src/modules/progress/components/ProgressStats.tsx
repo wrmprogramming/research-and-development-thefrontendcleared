@@ -14,17 +14,11 @@ import {
   XCircle,
   Loader2,
 } from 'lucide-react';
-
+import { toPersianNumber } from '../../../utils/formatter.utils';
 interface ProgressStatsProps {
   contractId?: number;
   className?: string;
 }
-
-const toPersianNumber = (num: number): string => {
-  if (num === undefined || num === null) return '۰';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return num.toString().replace(/\d/g, (d) => persianDigits[parseInt(d)]);
-};
 
 // گرفتن سال شمسی فعلی
 const getCurrentJalaliYear = (): number => {
@@ -164,7 +158,7 @@ const yearStatsData = useMemo(() => {
   }
 
   const isYearSelected = selectedYear !== 'all';
-  const yearLabel = isYearSelected ? `سال ${selectedYear}` : 'کل';
+const yearLabel = isYearSelected ? `سال ${toPersianNumber(selectedYear as number)}` : 'کل';
 
   // ========== کارت‌های اصلی ==========
   const statItems = [
@@ -249,7 +243,7 @@ const yearStatsData = useMemo(() => {
             <option value="all">همه سال‌ها</option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
-                {year}
+              {toPersianNumber(year)}
               </option>
             ))}
           </select>

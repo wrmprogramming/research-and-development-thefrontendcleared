@@ -1,12 +1,12 @@
 // src/modules/payment/components/PaymentList.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePayment } from '../hooks/usePayment';
-import { type Payment } from '../types/payment.types';
-import { formatCurrency } from '../../../utils/formatter.utils';
+import { type Payment, type PaymentFilters } from '../types/payment.types';
+import { formatCurrency, toPersianNumber } from '../../../utils/formatter.utils';
+
 import {
-  Search,
   Plus,
   Pencil,
   Trash2,
@@ -14,7 +14,6 @@ import {
   Filter,
   X,
   DollarSign,
-  FileText,
   CheckCircle,
   XCircle,
   Clock,
@@ -22,45 +21,52 @@ import {
   Building2,
 } from 'lucide-react';
 
+import {
+  Pagination,
+  SearchBar,
+  FilterPanel,
+  DataTable,
+  type Column,
+  type FilterField,
+} from '../../../components/common';
+
+import { ContractSelect } from '../../contract/components/ContractSelect';
+import JalaliDatePicker from '../../../components/JalaliDatePicker';
+
 interface PaymentListProps {
+  contractId?: number;
   onEdit?: (item: Payment) => void;
   onDelete?: (id: number) => void;
   onAdd?: () => void;
   onVerify?: (id: number) => void;
+  readOnly?: boolean;
 }
 
 export const PaymentList: React.FC<PaymentListProps> = ({
+  contractId,
   onEdit,
   onDelete,
   onAdd,
-  onVerify,
+  readOnly = false,
 }) => {
   const navigate = useNavigate();
   const { useList, delete: deletePayment, verify, isDeleting, isVerifying } = usePayment();
-  const [filters, setFilters] = useState<{
-    search?: string;
-    is_paid?: boolean;
-    is_verified?: boolean;
-  }>({});
+
+  // ========== State ==========
+  const [filters, setFilters] = useState<PaymentFilters>(
+    contractId ? { contract: contractId } : {}
+  );
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sortField, setSortField] = useState<string>('payment_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
+  // ========== Query ==========
   const { data, isLoading, refetch } = useList({
     ...filters,
-    search: debouncedSearchTerm || undefined,
+    search: searchTerm || undefined,
     page: currentPage,
     page_size: pageSize,
     ordering: sortOrder === 'desc' ? `-${sortField}` : sortField,
@@ -68,17 +74,19 @@ export const PaymentList: React.FC<PaymentListProps> = ({
 
   const payments = data?.results || [];
   const totalCount = data?.count || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
 
-  // ========== Handle View - رفتن به صفحه جزئیات ==========
-  const handleView = (payment: Payment) => {
-    navigate(`/payment/${payment.id}`);
+  // ========== Handlers ==========
+  const handleView = (item: Payment) => {
+    navigate(`/payment/${item.id}`);
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('آیا از حذف این پرداخت مطمئن هستید؟')) {
-      await deletePayment(id);
-      refetch();
+      if (onDelete) onDelete(id);
+      else {
+        await deletePayment(id);
+        refetch();
+      }
     }
   };
 
@@ -89,26 +97,51 @@ export const PaymentList: React.FC<PaymentListProps> = ({
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
   const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({
+    let finalValue = value;
+
+    // اعداد
+    if (
+      (key === 'year' || key === 'amount_min' || key === 'amount_max') &&
+      value !== undefined && value !== null && value !== ''
+    ) {
+      const numValue = Number(value);
+      finalValue = !isNaN(numValue) ? numValue : undefined;
+    }
+
+    // boolean
+    if (key === 'is_paid' || key === 'is_verified') {
+      if (value === 'true') finalValue = true;
+      else if (value === 'false') finalValue = false;
+      else finalValue = undefined;
+    }
+
+    setFilters((prev) => ({
       ...prev,
-      [key]: value === '' ? undefined : value,
+      [key]: finalValue === '' ? undefined : finalValue,
     }));
+
     setCurrentPage(1);
   };
 
   const clearFilters = () => {
-    setFilters({});
+    setFilters(contractId ? { contract: contractId } : {});
     setSearchTerm('');
-    setDebouncedSearchTerm('');
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || Object.values(filters).some(v => v !== undefined);
+  const hasActiveFilters =
+    searchTerm ||
+    Object.values(filters).some((v) => v !== undefined && v !== '' && v !== null);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortOrder('asc');
@@ -116,18 +149,7 @@ export const PaymentList: React.FC<PaymentListProps> = ({
     setCurrentPage(1);
   };
 
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
+  // ========== Status helper ==========
   const getStatusBadge = (isPaid: boolean, isVerified: boolean) => {
     if (isVerified) {
       return { label: 'تایید شده', color: '#059669', bgColor: '#d1fae5', icon: CheckCircle };
@@ -138,69 +160,250 @@ export const PaymentList: React.FC<PaymentListProps> = ({
     return { label: 'پرداخت نشده', color: '#dc2626', bgColor: '#fee2e2', icon: XCircle };
   };
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const pages = [];
-    const maxVisible = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return (
-      <div className="pagination-container">
-        <div className="pagination-info">
-          نمایش {((currentPage - 1) * pageSize) + 1} تا{' '}
-          {Math.min(currentPage * pageSize, totalCount)} از {totalCount} مورد
+  // ========== Columns ==========
+  const columns: Column<Payment>[] = [
+    {
+      key: 'payment_number',
+      title: 'شماره پرداخت',
+      sortable: true,
+      render: (item) => (
+        <span className="payment-code">{item.payment_number}</span>
+      ),
+    },
+    {
+      key: 'amount',
+      title: 'مبلغ',
+      sortable: true,
+      render: (item) => (
+        <div className="amount-cell">
+          <DollarSign size={14} />
+          {formatCurrency(Number(item.amount))}
         </div>
-        <div className="pagination-controls">
-          <button className="pagination-btn" onClick={() => goToPage(1)} disabled={currentPage === 1}>
-            <span className="double-chevron-left">«</span>
-          </button>
-          <button className="pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
-            <span className="single-chevron-left">‹</span>
-          </button>
-          {pages.map((page) => (
-            <button key={page} className={`pagination-btn ${page === currentPage ? 'active' : ''}`} onClick={() => goToPage(page)}>
-              {page}
-            </button>
-          ))}
-          <button className="pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
-            <span className="single-chevron-right">›</span>
-          </button>
-          <button className="pagination-btn" onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages}>
-            <span className="double-chevron-right">»</span>
-          </button>
+      ),
+    },
+    {
+      key: 'payment_date',
+      title: 'تاریخ پرداخت',
+      sortable: true,
+      render: (item) => (
+        <div className="date-cell">
+          {item.payment_date ? toPersianNumber(item.payment_date) : '—'}
         </div>
-        <div className="page-size-selector">
-          <label>تعداد در صفحه:</label>
-          <select value={pageSize} onChange={handlePageSizeChange}>
-            <option value={5}>۵</option>
-            <option value={10}>۱۰</option>
-            <option value={20}>۲۰</option>
-            <option value={50}>۵۰</option>
-          </select>
+      ),
+    },
+    {
+      key: 'payment_type_name',
+      title: 'نوع پرداخت',
+      render: (item) => (
+        <span className="payment-type-badge">
+          {item.payment_type_name || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'contract_number',
+      title: 'قرارداد',
+      render: (item) => (
+        <div className="contract-cell">
+          <Building2 size={14} className="contract-icon" />
+          <div className="contract-info">
+            <span className="contract-number">{item.contract_number || '—'}</span>
+            {item.contract_subject && (
+              <span className="contract-subject">{item.contract_subject}</span>
+            )}
+          </div>
         </div>
-      </div>
-    );
-  };
+      ),
+    },
+    {
+      key: 'is_verified',
+      title: 'وضعیت',
+      sortable: true,
+      render: (item) => {
+        const status = getStatusBadge(item.is_paid, item.is_verified);
+        const StatusIcon = status.icon;
+        return (
+          <span
+            className="status-badge"
+            style={{ backgroundColor: status.bgColor, color: status.color }}
+          >
+            <StatusIcon size={12} />
+            {status.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'attachments',
+      title: 'فایل‌ها',
+      render: (item) =>
+        item.attachments && item.attachments.length > 0 ? (
+          <div className="attachments-cell">
+            <span className="attachment-count">
+              {toPersianNumber(item.attachments.length)} فایل
+            </span>
+            <div className="attachment-icons">
+              {item.attachments.slice(0, 2).map((att) => (
+                <a
+                  key={att.id}
+                  href={att.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="attachment-link"
+                  title={att.filename}
+                >
+                  <Paperclip size={12} />
+                </a>
+              ))}
+              {item.attachments.length > 2 && (
+                <span className="more-files">
+                  +{toPersianNumber(item.attachments.length - 2)}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
+    {
+      key: 'actions',
+      title: 'عملیات',
+      width: 160,
+      render: (item) => (
+        <div className="actions">
+          <button
+            className="action-btn view"
+            onClick={() => handleView(item)}
+            title="مشاهده"
+          >
+            <Eye size={16} />
+          </button>
+          {!readOnly && (
+            <>
+              <button
+                className="action-btn edit"
+                onClick={() => onEdit?.(item)}
+                title="ویرایش"
+              >
+                <Pencil size={16} />
+              </button>
+              {!item.is_verified && (
+                <button
+                  className="action-btn verify"
+                  onClick={() => handleVerify(item.id)}
+                  disabled={isVerifying}
+                  title="تایید"
+                >
+                  <CheckCircle size={16} />
+                </button>
+              )}
+              <button
+                className="action-btn delete"
+                onClick={() => handleDelete(item.id)}
+                disabled={isDeleting}
+                title="حذف"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">در حال بارگذاری...</span>
-        </div>
-      </div>
-    );
-  }
+  // ========== Filter Fields ==========
+  const filterFields: FilterField[] = [
+    // قرارداد (فقط اگر standalone)
+    ...(!contractId
+      ? [
+          {
+            key: 'contract',
+            label: 'قرارداد',
+            type: 'custom' as const,
+            customComponent: (
+              <ContractSelect
+                value={filters.contract ?? null}
+                onChange={(id) => handleFilterChange('contract', id)}
+                placeholder="انتخاب قرارداد..."
+                label=""
+              />
+            ),
+          },
+        ]
+      : []),
+    {
+      key: 'year',
+      label: 'سال',
+      type: 'number',
+      placeholder: 'مثال: 1405',
+    },
+    {
+      key: 'is_paid',
+      label: 'وضعیت پرداخت',
+      type: 'select',
+      options: [
+        { value: 'true', label: 'پرداخت شده' },
+        { value: 'false', label: 'پرداخت نشده' },
+      ],
+    },
+    {
+      key: 'is_verified',
+      label: 'وضعیت تایید',
+      type: 'select',
+      options: [
+        { value: 'true', label: 'تایید شده' },
+        { value: 'false', label: 'تایید نشده' },
+      ],
+    },
+    {
+      key: 'amount_min',
+      label: 'مبلغ از (ریال)',
+      type: 'number',
+      placeholder: 'حداقل مبلغ',
+    },
+    {
+      key: 'amount_max',
+      label: 'مبلغ تا (ریال)',
+      type: 'number',
+      placeholder: 'حداکثر مبلغ',
+    },
+    {
+      key: 'date_group',
+      label: '',
+      type: 'fieldset',
+      fieldsetTitle: '📅 بازه تاریخ پرداخت',
+      fieldsetFields: [
+        {
+          key: 'payment_date_from',
+          label: 'از تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={(filters.payment_date_from as string) || null}
+              onChange={(date) => handleFilterChange('payment_date_from', date)}
+              placeholder="1405/01/01"
+              label=""
+            />
+          ),
+        },
+        {
+          key: 'payment_date_to',
+          label: 'تا تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={(filters.payment_date_to as string) || null}
+              onChange={(date) => handleFilterChange('payment_date_to', date)}
+              placeholder="1405/12/29"
+              label=""
+            />
+          ),
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="payment-list">
@@ -208,9 +411,9 @@ export const PaymentList: React.FC<PaymentListProps> = ({
         <div className="header-title">
           <DollarSign size={24} />
           <h2>پرداخت‌ها</h2>
-          <span className="badge">{totalCount}</span>
+          <span className="badge">{toPersianNumber(totalCount)}</span>
         </div>
-        {onAdd && (
+        {!readOnly && onAdd && (
           <button className="btn-primary" onClick={onAdd}>
             <Plus size={18} />
             افزودن پرداخت
@@ -219,21 +422,11 @@ export const PaymentList: React.FC<PaymentListProps> = ({
       </div>
 
       <div className="search-section">
-        <div className="search-input-wrapper">
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            placeholder="جستجو در شماره پرداخت، توضیحات و شماره قرارداد..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          {searchTerm && (
-            <button className="clear-btn" onClick={() => setSearchTerm('')}>
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={handleSearchChange}
+          placeholder="جستجو در شماره پرداخت، توضیحات و شماره قرارداد..."
+        />
 
         <div className="filter-actions">
           <button
@@ -254,756 +447,87 @@ export const PaymentList: React.FC<PaymentListProps> = ({
       </div>
 
       {showFilters && (
-        <div className="filter-panel">
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label>وضعیت پرداخت</label>
-              <select
-                value={filters.is_paid === undefined ? '' : filters.is_paid ? 'paid' : 'unpaid'}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  handleFilterChange('is_paid', val === '' ? undefined : val === 'paid');
-                }}
-              >
-                <option value="">همه</option>
-                <option value="paid">پرداخت شده</option>
-                <option value="unpaid">پرداخت نشده</option>
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>وضعیت تایید</label>
-              <select
-                value={filters.is_verified === undefined ? '' : filters.is_verified ? 'verified' : 'unverified'}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  handleFilterChange('is_verified', val === '' ? undefined : val === 'verified');
-                }}
-              >
-                <option value="">همه</option>
-                <option value="verified">تایید شده</option>
-                <option value="unverified">تایید نشده</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <FilterPanel
+          fields={filterFields}
+          values={filters}
+          onChange={handleFilterChange}
+        />
       )}
 
-      {payments.length === 0 ? (
-        <div className="empty-state">
-          <DollarSign size={48} />
-          <h5>هیچ پرداختی یافت نشد</h5>
-          <p className="text-muted">
-            {hasActiveFilters ? 'با فیلترهای انتخاب شده موردی پیدا نشد' : 'هنوز پرداختی ثبت نشده است'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="table-responsive">
-            <table className="payment-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('payment_number')} className="sortable">
-                    شماره پرداخت {sortField === 'payment_number' && <span className="sort-icon">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
-                  </th>
-                  <th onClick={() => handleSort('amount')} className="sortable">
-                    مبلغ {sortField === 'amount' && <span className="sort-icon">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
-                  </th>
-                  <th onClick={() => handleSort('payment_date')} className="sortable">
-                    تاریخ پرداخت {sortField === 'payment_date' && <span className="sort-icon">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
-                  </th>
-                  <th>نوع پرداخت</th>
-                  <th>قرارداد</th>
-                  <th onClick={() => handleSort('is_verified')} className="sortable">
-                    وضعیت {sortField === 'is_verified' && <span className="sort-icon">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
-                  </th>
-                  <th>فایل‌ها</th>
-                  <th style={{ width: 160 }}>عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment) => {
-                  const status = getStatusBadge(payment.is_paid, payment.is_verified);
-                  const StatusIcon = status.icon;
+      <DataTable
+        data={payments}
+        columns={columns}
+        rowKey="id"
+        loading={isLoading}
+        emptyMessage={
+          hasActiveFilters
+            ? 'با فیلترهای انتخاب شده موردی پیدا نشد'
+            : 'هنوز پرداختی ثبت نشده است'
+        }
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+      />
 
-                  return (
-                    <tr key={payment.id}>
-                      <td>
-                        <span className="payment-code">{payment.payment_number}</span>
-                      </td>
-                      <td className="amount-cell">
-                        <DollarSign size={14} />
-                        {formatCurrency(payment.amount)}
-                      </td>
-                      <td>
-                        <div className="date-cell">
-                          {payment.payment_date}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="payment-type-badge">
-                          {payment.payment_type_name || '—'}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="contract-cell">
-                          <Building2 size={14} className="contract-icon" />
-                          <div className="contract-info">
-                            <span className="contract-number">
-                              {payment.contract_number || '—'}
-                            </span>
-                            {payment.contract_subject && (
-                              <span className="contract-subject">
-                                {payment.contract_subject}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span
-                          className="status-badge"
-                          style={{
-                            backgroundColor: status.bgColor,
-                            color: status.color,
-                          }}
-                        >
-                          <StatusIcon size={12} />
-                          {status.label}
-                        </span>
-                      </td>
-                      <td>
-                        {payment.attachments && payment.attachments.length > 0 ? (
-                          <div className="attachments-cell">
-                            <span className="attachment-count">{payment.attachments.length} فایل</span>
-                            <div className="attachment-icons">
-                              {payment.attachments.slice(0, 2).map((att) => (
-                                <a
-                                  key={att.id}
-                                  href={att.file}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="attachment-link"
-                                  title={att.filename}
-                                >
-                                  <Paperclip size={12} />
-                                </a>
-                              ))}
-                              {payment.attachments.length > 2 && (
-                                <span className="more-files">+{payment.attachments.length - 2}</span>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted">—</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="actions">
-                          {/* ✅ دکمه مشاهده - رفتن به صفحه جزئیات */}
-                          <button
-                            className="action-btn view"
-                            onClick={() => handleView(payment)}
-                            title="مشاهده"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            className="action-btn edit"
-                            onClick={() => onEdit?.(payment)}
-                            title="ویرایش"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          {!payment.is_verified && (
-                            <button
-                              className="action-btn verify"
-                              onClick={() => handleVerify(payment.id)}
-                              disabled={isVerifying}
-                              title="تایید"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                          )}
-                          <button
-                            className="action-btn delete"
-                            onClick={() => handleDelete(payment.id)}
-                            disabled={isDeleting}
-                            title="حذف"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {renderPagination()}
-        </>
-      )}
+      <Pagination
+        totalItems={totalCount}
+        pageSize={pageSize}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
       <style>{`
-        .payment-list {
-          background: white;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        .payment-list-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .header-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .header-title h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .badge {
-          background: #eef2ff;
-          color: #4f46e5;
-          padding: 2px 10px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 20px;
-          background: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-          background: #4338ca;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-
-        .search-section {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-
-        .search-input-wrapper {
-          flex: 1;
-          position: relative;
-        }
-
-        .search-input {
-          width: 100%;
-          padding: 8px 40px 8px 12px;
-          border: 1.5px solid #e9ecef;
-          border-radius: 8px;
-          font-size: 14px;
-          transition: all 0.2s;
-        }
-
-        .search-input:focus {
-          border-color: #4f46e5;
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .search-icon {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #9ca3af;
-        }
-
-        .clear-btn {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          color: #9ca3af;
-          cursor: pointer;
-          padding: 4px;
-        }
-
-        .clear-btn:hover {
-          color: #ef4444;
-        }
-
-        .filter-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .filter-toggle {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border: 1.5px solid #e9ecef;
-          border-radius: 8px;
-          background: white;
-          color: #6b7280;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .filter-toggle:hover {
-          border-color: #4f46e5;
-          color: #4f46e5;
-        }
-
-        .filter-toggle.active {
-          border-color: #4f46e5;
-          background: #eef2ff;
-          color: #4f46e5;
-        }
-
-        .badge-filter {
-          color: #4f46e5;
-          font-size: 18px;
-        }
-
-        .clear-filters {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 8px 12px;
-          border: none;
-          background: #fee2e2;
-          color: #dc2626;
-          border-radius: 8px;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .clear-filters:hover {
-          background: #fecaca;
-        }
-
-        .filter-panel {
-          padding: 16px;
-          margin-bottom: 16px;
-          background: #f8fafc;
-          border-radius: 8px;
-        }
-
-        .filter-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 16px;
-        }
-
-        .filter-group {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .filter-group label {
-          font-size: 12px;
-          font-weight: 500;
-          color: #374151;
-        }
-
-        .filter-group select {
-          padding: 8px 12px;
-          border: 1.5px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 13px;
-        }
-
-        .sortable {
-          cursor: pointer;
-          user-select: none;
-          transition: all 0.2s;
-        }
-
-        .sortable:hover {
-          color: #4f46e5;
-        }
-
-        .sort-icon {
-          display: inline-block;
-          margin-right: 4px;
-          font-size: 11px;
-          color: #4f46e5;
-        }
-
-        .payment-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        .payment-table thead th {
-          padding: 12px 16px;
-          text-align: right;
-          font-weight: 600;
-          font-size: 13px;
-          color: #6b7280;
-          border-bottom: 2px solid #e9ecef;
-        }
-
-        .payment-table tbody td {
-          padding: 12px 16px;
-          border-bottom: 1px solid #f3f4f6;
-          vertical-align: middle;
-        }
-
-        .payment-table tbody tr:hover {
-          background: #f8fafc;
-        }
-
-        .payment-code {
-          font-family: monospace;
-          font-weight: 600;
-          color: #4f46e5;
-          background: #eef2ff;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-        }
-
-        .amount-cell {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-weight: 600;
-          color: #1a1a2e;
-        }
-
-        .date-cell {
-          font-size: 13px;
-          color: #6b7280;
-          direction: ltr;
-        }
-
-        .payment-type-badge {
-          background: #f3f4f6;
-          padding: 2px 10px;
-          border-radius: 12px;
-          font-size: 12px;
-          color: #374151;
-        }
-
-        .contract-cell {
-          display: flex;
-          align-items: flex-start;
-          gap: 6px;
-        }
-
-        .contract-icon {
-          flex-shrink: 0;
-          margin-top: 2px;
-          color: #6b7280;
-        }
-
-        .contract-info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .contract-number {
-          font-family: monospace;
-          font-size: 12px;
-          color: #4f46e5;
-          font-weight: 600;
-        }
-
-        .contract-subject {
-          font-size: 12px;
-          color: #6b7280;
-          max-width: 150px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .status-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .attachments-cell {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .attachment-count {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .attachment-icons {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .attachment-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border-radius: 4px;
-          color: #4f46e5;
-          background: #eef2ff;
-          transition: all 0.2s;
-          text-decoration: none;
-        }
-
-        .attachment-link:hover {
-          background: #dbeafe;
-          color: #4338ca;
-        }
-
-        .more-files {
-          font-size: 11px;
-          color: #6b7280;
-          background: #f3f4f6;
-          padding: 0 6px;
-          border-radius: 10px;
-        }
-
-        .actions {
-          display: flex;
-          gap: 4px;
-          flex-wrap: wrap;
-        }
-
-        .action-btn {
-          width: 32px;
-          height: 32px;
-          border: none;
-          border-radius: 6px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s;
-          background: transparent;
-          color: #6b7280;
-        }
-
-        .action-btn:hover {
-          background: #f3f4f6;
-        }
-
-        .action-btn.view:hover {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        .action-btn.edit:hover {
-          background: #eef2ff;
-          color: #4f46e5;
-        }
-
-        .action-btn.verify:hover {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        .action-btn.delete:hover {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .action-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .text-muted {
-          color: #9ca3af;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: 40px;
-        }
-
-        .empty-state svg {
-          color: #d1d5db;
-          margin-bottom: 12px;
-        }
-
-        .empty-state h5 {
-          margin-bottom: 4px;
-          color: #374151;
-        }
-
-        .pagination-container {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 16px;
-          padding: 16px 0;
-          border-top: 1px solid #e9ecef;
-          margin-top: 16px;
-        }
-
-        .pagination-info {
-          font-size: 14px;
-          color: #6b7280;
-        }
-
-        .pagination-controls {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .pagination-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 36px;
-          height: 36px;
-          padding: 0 8px;
-          border: 1px solid #e9ecef;
-          border-radius: 6px;
-          background: white;
-          color: #374151;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .pagination-btn:hover:not(:disabled) {
-          background: #f3f4f6;
-          border-color: #d1d5db;
-        }
-
-        .pagination-btn.active {
-          background: #4f46e5;
-          border-color: #4f46e5;
-          color: white;
-          font-weight: 600;
-        }
-
-        .pagination-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
-
-        .page-size-selector {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          color: #6b7280;
-        }
-
-        .page-size-selector select {
-          padding: 4px 8px;
-          border: 1px solid #e9ecef;
-          border-radius: 4px;
-          font-size: 14px;
-          background: white;
-          cursor: pointer;
-        }
-
-        .double-chevron-right,
-        .double-chevron-left,
-        .single-chevron-right,
-        .single-chevron-left {
-          font-size: 18px;
-          font-weight: 700;
-          line-height: 1;
-          display: inline-block;
-          color: inherit;
-        }
-
-        .double-chevron-right,
-        .double-chevron-left {
-          font-size: 16px;
-        }
-
-        .single-chevron-right,
-        .single-chevron-left {
-          font-size: 20px;
-        }
-
+        .payment-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .payment-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-title { display: flex; align-items: center; gap: 12px; }
+        .header-title h2 { margin: 0; font-size: 20px; font-weight: 600; }
+        .badge { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .search-section { display: flex; gap: 12px; margin-bottom: 16px; }
+        .filter-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .filter-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid #e9ecef; border-radius: 8px; background: white; color: #6b7280; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .filter-toggle:hover { border-color: #4f46e5; color: #4f46e5; }
+        .filter-toggle.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+        .badge-filter { color: #4f46e5; font-size: 18px; }
+        .clear-filters { display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; border: none; background: #fee2e2; color: #dc2626; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .clear-filters:hover { background: #fecaca; }
+        .payment-code { font-family: monospace; font-weight: 600; color: #4f46e5; background: #eef2ff; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .amount-cell { display: flex; align-items: center; gap: 4px; font-weight: 600; color: #1a1a2e; }
+        .date-cell { font-size: 13px; color: #6b7280; }
+        .payment-type-badge { background: #f3f4f6; padding: 2px 10px; border-radius: 12px; font-size: 12px; color: #374151; }
+        .contract-cell { display: flex; align-items: flex-start; gap: 6px; }
+        .contract-icon { flex-shrink: 0; margin-top: 2px; color: #6b7280; }
+        .contract-info { display: flex; flex-direction: column; gap: 2px; }
+        .contract-number { font-family: monospace; font-size: 12px; color: #4f46e5; font-weight: 600; }
+        .contract-subject { font-size: 12px; color: #6b7280; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .attachments-cell { display: flex; align-items: center; gap: 6px; }
+        .attachment-count { font-size: 12px; color: #6b7280; }
+        .attachment-icons { display: flex; align-items: center; gap: 4px; }
+        .attachment-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; color: #4f46e5; background: #eef2ff; transition: all 0.2s; text-decoration: none; }
+        .attachment-link:hover { background: #dbeafe; color: #4338ca; }
+        .more-files { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 0 6px; border-radius: 10px; }
+        .actions { display: flex; gap: 4px; flex-wrap: wrap; }
+        .action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280; }
+        .action-btn:hover { background: #f3f4f6; }
+        .action-btn.view:hover { background: #d1fae5; color: #059669; }
+        .action-btn.edit:hover { background: #eef2ff; color: #4f46e5; }
+        .action-btn.verify:hover { background: #d1fae5; color: #059669; }
+        .action-btn.delete:hover { background: #fee2e2; color: #dc2626; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .text-muted { color: #9ca3af; }
         @media (max-width: 768px) {
-          .payment-list {
-            padding: 12px;
-          }
-
-          .search-section {
-            flex-direction: column;
-          }
-
-          .filter-actions {
-            width: 100%;
-          }
-
-          .filter-actions button {
-            flex: 1;
-            justify-content: center;
-          }
-
-          .filter-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .payment-table {
-            font-size: 13px;
-          }
-
-          .payment-table thead th,
-          .payment-table tbody td {
-            padding: 8px 10px;
-          }
-
-          .pagination-container {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .pagination-info {
-            text-align: center;
-          }
-
-          .pagination-controls {
-            flex-wrap: wrap;
-            justify-content: center;
-          }
-
-          .contract-subject {
-            max-width: 100px;
-          }
+          .payment-list { padding: 12px; }
+          .search-section { flex-direction: column; }
+          .filter-actions { width: 100%; }
+          .filter-actions button { flex: 1; justify-content: center; }
+          .contract-subject { max-width: 100px; }
+          .actions { flex-direction: column; gap: 2px; }
         }
       `}</style>
     </div>
@@ -1015,10 +539,10 @@ export default PaymentList;
 // // src/modules/payment/components/PaymentList.tsx
 
 // import React, { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
 // import { usePayment } from '../hooks/usePayment';
 // import { type Payment } from '../types/payment.types';
 // import { formatCurrency } from '../../../utils/formatter.utils';
-// import dateUtils from '@utils/dateUtils';
 // import {
 //   Search,
 //   Plus,
@@ -1028,22 +552,17 @@ export default PaymentList;
 //   Filter,
 //   X,
 //   DollarSign,
-//   User,
 //   FileText,
 //   CheckCircle,
 //   XCircle,
 //   Clock,
-//   Download,
 //   Paperclip,
 //   Building2,
-//   ChevronLeft,
-//   ChevronRight,
 // } from 'lucide-react';
 
 // interface PaymentListProps {
 //   onEdit?: (item: Payment) => void;
 //   onDelete?: (id: number) => void;
-//   onView?: (item: Payment) => void;
 //   onAdd?: () => void;
 //   onVerify?: (id: number) => void;
 // }
@@ -1051,10 +570,10 @@ export default PaymentList;
 // export const PaymentList: React.FC<PaymentListProps> = ({
 //   onEdit,
 //   onDelete,
-//   onView,
 //   onAdd,
 //   onVerify,
 // }) => {
+//   const navigate = useNavigate();
 //   const { useList, delete: deletePayment, verify, isDeleting, isVerifying } = usePayment();
 //   const [filters, setFilters] = useState<{
 //     search?: string;
@@ -1088,6 +607,11 @@ export default PaymentList;
 //   const payments = data?.results || [];
 //   const totalCount = data?.count || 0;
 //   const totalPages = Math.ceil(totalCount / pageSize);
+
+//   // ========== Handle View - رفتن به صفحه جزئیات ==========
+//   const handleView = (payment: Payment) => {
+//     navigate(`/payment/${payment.id}`);
+//   };
 
 //   const handleDelete = async (id: number) => {
 //     if (window.confirm('آیا از حذف این پرداخت مطمئن هستید؟')) {
@@ -1152,75 +676,60 @@ export default PaymentList;
 //     return { label: 'پرداخت نشده', color: '#dc2626', bgColor: '#fee2e2', icon: XCircle };
 //   };
 
-//   const getFileName = (url: string) => {
-//     if (!url) return 'فایل';
-//     try {
-//       const parts = url.split('/');
-//       return parts[parts.length - 1] || 'فایل';
-//     } catch {
-//       return 'فایل';
+//   const renderPagination = () => {
+//     if (totalPages <= 1) return null;
+
+//     const pages = [];
+//     const maxVisible = 5;
+//     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+//     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+//     if (endPage - startPage < maxVisible - 1) {
+//       startPage = Math.max(1, endPage - maxVisible + 1);
 //     }
+
+//     for (let i = startPage; i <= endPage; i++) {
+//       pages.push(i);
+//     }
+
+//     return (
+//       <div className="pagination-container">
+//         <div className="pagination-info">
+//           نمایش {((currentPage - 1) * pageSize) + 1} تا{' '}
+//           {Math.min(currentPage * pageSize, totalCount)} از {totalCount} مورد
+//         </div>
+//         <div className="pagination-controls">
+//           <button className="pagination-btn" onClick={() => goToPage(1)} disabled={currentPage === 1}>
+//             <span className="double-chevron-left">«</span>
+//           </button>
+//           <button className="pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+//             <span className="single-chevron-left">‹</span>
+//           </button>
+//           {pages.map((page) => (
+//             <button key={page} className={`pagination-btn ${page === currentPage ? 'active' : ''}`} onClick={() => goToPage(page)}>
+//               {page}
+//             </button>
+//           ))}
+//           <button className="pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
+//             <span className="single-chevron-right">›</span>
+//           </button>
+//           <button className="pagination-btn" onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages}>
+//             <span className="double-chevron-right">»</span>
+//           </button>
+//         </div>
+//         <div className="page-size-selector">
+//           <label>تعداد در صفحه:</label>
+//           <select value={pageSize} onChange={handlePageSizeChange}>
+//             <option value={5}>۵</option>
+//             <option value={10}>۱۰</option>
+//             <option value={20}>۲۰</option>
+//             <option value={50}>۵۰</option>
+//           </select>
+//         </div>
+//       </div>
+//     );
 //   };
 
-//   const renderPagination = () => {
-//   if (totalPages <= 1) return null;
-
-//   const pages = [];
-//   const maxVisible = 5;
-//   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-//   let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-  
-//   if (endPage - startPage < maxVisible - 1) {
-//     startPage = Math.max(1, endPage - maxVisible + 1);
-//   }
-
-//   for (let i = startPage; i <= endPage; i++) {
-//     pages.push(i);
-//   }
-
-//   return (
-//     <div className="pagination-container">
-//       <div className="pagination-info">
-//         نمایش {((currentPage - 1) * pageSize) + 1} تا{' '}
-//         {Math.min(currentPage * pageSize, totalCount)} از {totalCount} مورد
-//       </div>
-//       <div className="pagination-controls">
-//         {/* دکمه رفتن به صفحه اول */}
-//         <button className="pagination-btn" onClick={() => goToPage(1)} disabled={currentPage === 1}>
-//           <span className="double-chevron-left">«</span>
-//         </button>
-//         {/* دکمه صفحه قبلی */}
-//         <button className="pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
-//           <span className="single-chevron-left">‹</span>
-//         </button>
-//         {pages.map((page) => (
-//           <button key={page} className={`pagination-btn ${page === currentPage ? 'active' : ''}`} onClick={() => goToPage(page)}>
-//             {page}
-//           </button>
-//         ))}
-//         {/* دکمه صفحه بعدی */}
-//         <button className="pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
-//           <span className="single-chevron-right">›</span>
-//         </button>
-//         {/* دکمه رفتن به صفحه آخر */}
-//         <button className="pagination-btn" onClick={() => goToPage(totalPages)} disabled={currentPage === totalPages}>
-//           <span className="double-chevron-right">»</span>
-//         </button>
-//       </div>
-//       <div className="page-size-selector">
-//         <label>تعداد در صفحه:</label>
-//         <select value={pageSize} onChange={handlePageSizeChange}>
-//           <option value={5}>۵</option>
-//           <option value={10}>۱۰</option>
-//           <option value={20}>۲۰</option>
-//           <option value={50}>۵۰</option>
-//         </select>
-//       </div>
-//     </div>
-//   );
-// };
-
-  
 //   if (isLoading) {
 //     return (
 //       <div className="text-center py-5">
@@ -1373,7 +882,6 @@ export default PaymentList;
 //                           {payment.payment_type_name || '—'}
 //                         </span>
 //                       </td>
-                     
 //                       <td>
 //                         <div className="contract-cell">
 //                           <Building2 size={14} className="contract-icon" />
@@ -1429,9 +937,10 @@ export default PaymentList;
 //                       </td>
 //                       <td>
 //                         <div className="actions">
+//                           {/* ✅ دکمه مشاهده - رفتن به صفحه جزئیات */}
 //                           <button
 //                             className="action-btn view"
-//                             onClick={() => onView?.(payment)}
+//                             onClick={() => handleView(payment)}
 //                             title="مشاهده"
 //                           >
 //                             <Eye size={16} />
@@ -1737,14 +1246,6 @@ export default PaymentList;
 //           color: #374151;
 //         }
 
-//         .receiver-cell {
-//           display: flex;
-//           align-items: center;
-//           gap: 6px;
-//           font-size: 13px;
-//           color: #374151;
-//         }
-
 //         .contract-cell {
 //           display: flex;
 //           align-items: flex-start;
@@ -1972,6 +1473,27 @@ export default PaymentList;
 //           cursor: pointer;
 //         }
 
+//         .double-chevron-right,
+//         .double-chevron-left,
+//         .single-chevron-right,
+//         .single-chevron-left {
+//           font-size: 18px;
+//           font-weight: 700;
+//           line-height: 1;
+//           display: inline-block;
+//           color: inherit;
+//         }
+
+//         .double-chevron-right,
+//         .double-chevron-left {
+//           font-size: 16px;
+//         }
+
+//         .single-chevron-right,
+//         .single-chevron-left {
+//           font-size: 20px;
+//         }
+
 //         @media (max-width: 768px) {
 //           .payment-list {
 //             padding: 12px;
@@ -2021,31 +1543,9 @@ export default PaymentList;
 //             max-width: 100px;
 //           }
 //         }
-//           .double-chevron-right,
-// .double-chevron-left,
-// .single-chevron-right,
-// .single-chevron-left {
-//   font-size: 18px;
-//   font-weight: 700;
-//   line-height: 1;
-//   display: inline-block;
-//   color: inherit;
-// }
-
-// .double-chevron-right,
-// .double-chevron-left {
-//   font-size: 16px;
-// }
-
-// .single-chevron-right,
-// .single-chevron-left {
-//   font-size: 20px;
-// }
 //       `}</style>
 //     </div>
 //   );
-
-
 // };
 
 // export default PaymentList;

@@ -101,6 +101,7 @@ export interface ContractFormData {
 
 
 // ========== Contract Filters ==========
+// ========== Contract Filters ==========
 export interface ContractFilters {
   status?: ContractStatus;
   company?: number;
@@ -108,13 +109,37 @@ export interface ContractFilters {
   is_archived?: boolean;
   search?: string;
   year?: number;
-  contractor?: string; 
+  contractor?: string;
   affiliation_type?: 'UNIVERSITY' | 'COMPANY';
+
+  // ✅ فیلترهای جدید: بازه مبلغ
+  total_amount_min?: number;
+  total_amount_max?: number;
+
+  // ✅ فیلترهای جدید: بازه پیشرفت مالی
+  financial_progress_min?: number;
+  financial_progress_max?: number;
+
+  // ✅ فیلترهای جدید: بازه پیشرفت فیزیکی
+  physical_progress_min?: number;
+  physical_progress_max?: number;
+
+  // ✅ فیلترهای جدید: بازه تاریخ قرارداد
+  date_from?: string;
+  date_to?: string;
+
+  // ✅ فیلترهای جدید: بازه تاریخ شروع
+  start_date_from?: string;
+  start_date_to?: string;
+
+  // ✅ فیلترهای جدید: بازه تاریخ پایان
+  end_date_from?: string;
+  end_date_to?: string;
+
   page?: number;
   page_size?: number;
   ordering?: string;
 }
-
 // ========== Contract Activity ==========
 export interface ContractActivity extends IBaseModel {
   title: string;

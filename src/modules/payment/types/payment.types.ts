@@ -109,8 +109,17 @@ export interface PaymentFilters {
   is_verified?: boolean;
   receiver?: number;
   search?: string;
+
+  // ✅ فیلترهای جدید
+  year?: number;
+  amount_min?: number;
+  amount_max?: number;
+  payment_date_from?: string;
+  payment_date_to?: string;
+
   page?: number;
   page_size?: number;
+  ordering?: string;
 }
 
 export interface PaymentType {

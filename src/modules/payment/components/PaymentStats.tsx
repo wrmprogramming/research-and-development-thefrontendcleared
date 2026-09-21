@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { usePayment } from '../hooks/usePayment';
-import { formatCurrency } from '../../../utils/formatter.utils';
 import moment from 'moment-jalaali';
 import {
   DollarSign,
@@ -20,21 +19,11 @@ import {
   CreditCard,
   Loader2,
 } from 'lucide-react';
-
+import { formatCurrency, toPersianNumber } from '../../../utils/formatter.utils';
 interface PaymentStatsProps {
   className?: string;
 }
 
-const toPersianNumber = (num: number): string => {
-  if (num === undefined || num === null) return '۰';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return num.toString().replace(/\d/g, (d) => persianDigits[parseInt(d)]);
-};
-
-// گرفتن سال شمسی فعلی
-const getCurrentJalaliYear = (): number => {
-  return moment().jYear();
-};
 
 export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) => {
   const { useStats } = usePayment();
@@ -168,7 +157,7 @@ export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) =>
       : 0;
     
     const isYearSelected = selectedYear !== 'all';
-    const yearLabel = isYearSelected ? `سال ${selectedYear}` : 'کل';
+    const yearLabel = isYearSelected ? `سال ${toPersianNumber(selectedYear as number)}` : 'کل';
     
     return [
       {
@@ -285,7 +274,7 @@ export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) =>
             <option value="all">همه سال‌ها</option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
-                {year}
+               {toPersianNumber(year)}
               </option>
             ))}
           </select>
@@ -320,7 +309,7 @@ export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) =>
           <h4 className="stats-detail-title">
             <CreditCard size={18} />
             توزیع بر اساس نوع پرداخت
-            {selectedYear !== 'all' && <span className="year-badge">سال {selectedYear}</span>}
+            {selectedYear !== 'all' && <span className="year-badge">سال {toPersianNumber(selectedYear as number)}</span>}
           </h4>
           <div className="status-stats">
             {stats.by_payment_type.map((item) => {
@@ -359,12 +348,12 @@ export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) =>
         <h4 className="stats-detail-title">
           <Calendar size={18} />
           توزیع بر اساس ماه
-          {selectedYear !== 'all' && <span className="year-badge">سال {selectedYear}</span>}
+          {selectedYear !== 'all' && <span className="year-badge">سال {toPersianNumber(selectedYear)}</span>}
         </h4>
         <div className="status-stats">
           {Object.keys(filteredByMonth).length === 0 ? (
             <div className="empty-state-small">
-              <span>هیچ پرداختی در {selectedYear !== 'all' ? `سال ${selectedYear}` : 'سال‌های انتخاب شده'} ثبت نشده است</span>
+              <span>هیچ پرداختی در {selectedYear !== 'all' ? `سال ${toPersianNumber(selectedYear)}` : 'سال‌های انتخاب شده'} ثبت نشده است</span>
             </div>
           ) : (
             Object.entries(filteredByMonth)
@@ -404,7 +393,7 @@ export const PaymentStats: React.FC<PaymentStatsProps> = ({ className = '' }) =>
         <div className="contract-stats-header">
           <Building2 size={18} />
           <span>خلاصه وضعیت قراردادها</span>
-          {selectedYear !== 'all' && <span className="year-badge">سال {selectedYear}</span>}
+          {selectedYear !== 'all' && <span className="year-badge">سال {toPersianNumber(selectedYear)}</span>}
         </div>
         <div className="contract-stats-body">
           <div className="contract-stat-item">

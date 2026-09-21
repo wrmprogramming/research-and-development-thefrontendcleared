@@ -2,7 +2,7 @@
 
 import React from 'react';
 import './Pagination.css';
-
+import { toPersianNumber } from '../../../utils/formatter.utils';
 interface PaginationProps {
   /** تعداد کل آیتم‌ها */
   totalItems: number;
@@ -68,13 +68,20 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className={`pagination-container ${className}`}>
+            {showInfo && totalItems > 0 && (
+        <div className="pagination-info">
+          نمایش {toPersianNumber(((currentPage - 1) * pageSize) + 1)} تا{' '}
+          {toPersianNumber(Math.min(currentPage * pageSize, totalItems))} از{' '}
+          {toPersianNumber(totalItems)} مورد
+        </div>
+      )}
       {/* اطلاعات تعداد آیتم‌ها */}
-      {showInfo && totalItems > 0 && (
+      {/* {showInfo && totalItems > 0 && (
         <div className="pagination-info">
           نمایش {((currentPage - 1) * pageSize) + 1} تا{' '}
           {Math.min(currentPage * pageSize, totalItems)} از {totalItems} مورد
         </div>
-      )}
+      )} */}
 
       {/* کنترل‌های صفحه‌بندی */}
       <div className="pagination-controls">
@@ -105,9 +112,18 @@ export const Pagination: React.FC<PaginationProps> = ({
             className={`pagination-btn ${page === currentPage ? 'active' : ''}`}
             onClick={() => handlePageChange(page)}
           >
-            {page}
+            {toPersianNumber(page)}
           </button>
         ))}
+        {/* {visiblePages.map((page) => (
+          <button
+            key={page}
+            className={`pagination-btn ${page === currentPage ? 'active' : ''}`}
+            onClick={() => handlePageChange(page)}
+          >
+            {page}
+          </button>
+        ))} */}
 
         {/* دکمه صفحه بعدی */}
         <button
@@ -140,10 +156,20 @@ export const Pagination: React.FC<PaginationProps> = ({
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
-                {size}
+                {toPersianNumber(size)}
               </option>
             ))}
           </select>
+          {/* <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select> */}
         </div>
       )}
     </div>

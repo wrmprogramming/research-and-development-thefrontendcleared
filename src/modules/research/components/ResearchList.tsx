@@ -1,10 +1,11 @@
 // src/modules/research/components/ResearchList.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useResearch } from '../hooks/useResearch';
 import { RESEARCH_STATUSES, type Research, type ResearchFilters } from '../types/research.types';
-import { formatCurrency } from '../../../utils/formatter.utils';
+import { formatCurrency, toPersianNumber } from '../../../utils/formatter.utils';
+
 import {
   Plus,
   Pencil,
@@ -13,7 +14,6 @@ import {
   Filter,
   X,
   FileText,
-  DollarSign,
   User,
   Building2,
   Paperclip,
@@ -29,6 +29,12 @@ import {
   type FilterField,
 } from '../../../components/common';
 
+// ✅ برای فیلترهای سفارشی
+import { PersonSelect } from '../../person/components/PersonSelect';
+import { CompanySelect } from '../../company/components/CompanySelect';
+import { UniversitySelect } from '../../university/components/UniversitySelect';
+import JalaliDatePicker from '../../../components/JalaliDatePicker';
+
 interface ResearchListProps {
   onEdit?: (item: Research) => void;
   onDelete?: (id: number) => void;
@@ -43,49 +49,41 @@ export const ResearchList: React.FC<ResearchListProps> = ({
   const navigate = useNavigate();
   const { useList, delete: deleteResearch, isDeleting } = useResearch();
 
+  // ========== State ==========
   const [filters, setFilters] = useState<ResearchFilters>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [yearInput, setYearInput] = useState<string>('');
-  const [debouncedYear, setDebouncedYear] = useState<number | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sortField, setSortField] = useState<string>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  // Debounce for search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // ✅ فیلترهای اضافی (خارج از ResearchFilters تایپ)
+  const [extraFilters, setExtraFilters] = useState<{
+    budget_min?: number;
+    budget_max?: number;
+    approve_date_from?: string;
+    approve_date_to?: string;
+    start_date_from?: string;
+    start_date_to?: string;
+    end_date_from?: string;
+    end_date_to?: string;
+  }>({});
 
-  // Debounce for year
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const yearValue = filters.year;
-      setDebouncedYear(yearValue);
-      setCurrentPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [filters.year]);
-
+  // ========== Query ==========
   const { data, isLoading, refetch } = useList({
     ...filters,
-    year: debouncedYear,
-    search: debouncedSearchTerm || undefined,
+    ...extraFilters,
+    search: searchTerm || undefined,
     page: currentPage,
     page_size: pageSize,
     ordering: sortOrder === 'desc' ? `-${sortField}` : sortField,
-  });
+  } as any);
 
   const researches = data?.results || [];
   const totalCount = data?.count || 0;
 
-  // ========== Handle View - رفتن به صفحه جزئیات ==========
+  // ========== Handlers ==========
   const handleView = (item: Research) => {
     navigate(`/research/${item.id}`);
   };
@@ -97,38 +95,69 @@ export const ResearchList: React.FC<ResearchListProps> = ({
     }
   };
 
-  const handleFilterChange = (key: keyof ResearchFilters, value: any) => {
-    let finalValue = value;
-    
-    if (key === 'year' && value) {
-      const numValue = Number(value);
-      finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    const extraKeys = [
+      'budget_min', 'budget_max',
+      'approve_date_from', 'approve_date_to',
+      'start_date_from', 'start_date_to',
+      'end_date_from', 'end_date_to',
+    ];
+
+    if (extraKeys.includes(key)) {
+      setExtraFilters((prev) => ({
+        ...prev,
+        [key]: value || undefined,
+      }));
+    } else {
+      let finalValue = value;
+
+      if (key === 'year' && value) {
+        const numValue = Number(value);
+        finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+      }
+
+      setFilters((prev) => ({
+        ...prev,
+        [key]: finalValue || undefined,
+      }));
     }
-    
-    setFilters((prev) => ({
-      ...prev,
-      [key]: finalValue || undefined,
-    }));
+
     setCurrentPage(1);
   };
 
   const clearFilters = () => {
     setFilters({});
+    setExtraFilters({});
     setSearchTerm('');
-    setDebouncedSearchTerm('');
-    setYearInput('');
-    setDebouncedYear(undefined);
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchTerm || 
-    Object.values(filters).some(v => v !== undefined && v !== '' && v !== null);
+  const hasActiveFilters =
+    searchTerm ||
+    Object.values(filters).some((v) => v !== undefined && v !== '' && v !== null) ||
+    Object.values(extraFilters).some((v) => v !== undefined && v !== '' && v !== null);
 
-  // تعریف ستون‌های جدول
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  // ========== ستون‌های جدول ==========
   const columns: Column<Research>[] = [
     {
       key: 'code',
       title: 'کد / عنوان',
+      sortable: true,
       render: (item) => (
         <div className="code-title">
           <span className="code-badge">{item.code}</span>
@@ -146,10 +175,15 @@ export const ResearchList: React.FC<ResearchListProps> = ({
     {
       key: 'year',
       title: 'سال',
+      sortable: true,
+      render: (item) => (
+       <span>{item.year ? toPersianNumber(item.year) : '—'}</span>
+  ),
     },
     {
       key: 'budget',
       title: 'مبلغ',
+      sortable: true,
       render: (item) => (
         <div className="budget-cell">
           {item.budget ? formatCurrency(item.budget) : '—'}
@@ -229,7 +263,6 @@ export const ResearchList: React.FC<ResearchListProps> = ({
       width: 120,
       render: (item) => (
         <div className="actions">
-          {/* ✅ دکمه مشاهده - رفتن به صفحه جزئیات */}
           <button className="action-btn view" onClick={() => handleView(item)} title="مشاهده">
             <Eye size={16} />
           </button>
@@ -249,8 +282,9 @@ export const ResearchList: React.FC<ResearchListProps> = ({
     },
   ];
 
-  // تعریف فیلدهای فیلتر
+  // ========== فیلدهای فیلتر ==========
   const filterFields: FilterField[] = [
+    // ========== فیلدهای پایه ==========
     {
       key: 'status',
       label: 'وضعیت',
@@ -264,7 +298,7 @@ export const ResearchList: React.FC<ResearchListProps> = ({
       key: 'year',
       label: 'سال',
       type: 'number',
-      placeholder: 'سال را وارد کنید...',
+      placeholder: 'مثال: 1405',
     },
     {
       key: 'affiliation_type',
@@ -273,6 +307,163 @@ export const ResearchList: React.FC<ResearchListProps> = ({
       options: [
         { value: 'UNIVERSITY', label: 'دانشگاه' },
         { value: 'COMPANY', label: 'شرکت' },
+      ],
+    },
+    {
+      key: 'primary_researcher',
+      label: 'پژوهشگر اصلی',
+      type: 'custom',
+      customComponent: (
+        <PersonSelect
+          value={filters.primary_researcher ?? null}
+          onChange={(id) => handleFilterChange('primary_researcher', id)}
+          placeholder="انتخاب پژوهشگر..."
+          label=""
+        />
+      ),
+    },
+    {
+      key: 'university',
+      label: 'دانشگاه',
+      type: 'custom',
+      customComponent: (
+        <UniversitySelect
+          value={filters.university ?? null}
+          onChange={(id) => handleFilterChange('university', id)}
+          placeholder="انتخاب دانشگاه..."
+        />
+      ),
+    },
+    {
+      key: 'company',
+      label: 'شرکت',
+      type: 'custom',
+      customComponent: (
+        <CompanySelect
+          value={filters.company ?? null}
+          onChange={(id) => handleFilterChange('company', id)}
+          placeholder="انتخاب شرکت..."
+        />
+      ),
+    },
+    {
+      key: 'budget_min',
+      label: 'بودجه از (ریال)',
+      type: 'number',
+      placeholder: 'حداقل بودجه',
+    },
+    {
+      key: 'budget_max',
+      label: 'بودجه تا (ریال)',
+      type: 'number',
+      placeholder: 'حداکثر بودجه',
+    },
+
+    // ========== ✅ کادر تاریخ تصویب ==========
+    {
+      key: 'approve_date_group',
+      label: '',
+      type: 'fieldset',
+      fieldsetTitle: '📅 تاریخ تصویب',
+      fieldsetFields: [
+        {
+          key: 'approve_date_from',
+          label: 'از تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.approve_date_from || null}
+              onChange={(date) => handleFilterChange('approve_date_from', date)}
+              placeholder="1405/01/01"
+              label=""
+            />
+          ),
+        },
+        {
+          key: 'approve_date_to',
+          label: 'تا تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.approve_date_to || null}
+              onChange={(date) => handleFilterChange('approve_date_to', date)}
+              placeholder="1405/12/29"
+              label=""
+            />
+          ),
+        },
+      ],
+    },
+
+    // ========== ✅ کادر تاریخ شروع ==========
+    {
+      key: 'start_date_group',
+      label: '',
+      type: 'fieldset',
+      fieldsetTitle: '📅 تاریخ شروع',
+      fieldsetFields: [
+        {
+          key: 'start_date_from',
+          label: 'از تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.start_date_from || null}
+              onChange={(date) => handleFilterChange('start_date_from', date)}
+              placeholder="1405/01/01"
+              label=""
+            />
+          ),
+        },
+        {
+          key: 'start_date_to',
+          label: 'تا تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.start_date_to || null}
+              onChange={(date) => handleFilterChange('start_date_to', date)}
+              placeholder="1405/12/29"
+              label=""
+            />
+          ),
+        },
+      ],
+    },
+
+    // ========== ✅ کادر تاریخ پایان ==========
+    {
+      key: 'end_date_group',
+      label: '',
+      type: 'fieldset',
+      fieldsetTitle: '📅 تاریخ پایان',
+      fieldsetFields: [
+        {
+          key: 'end_date_from',
+          label: 'از تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.end_date_from || null}
+              onChange={(date) => handleFilterChange('end_date_from', date)}
+              placeholder="1405/01/01"
+              label=""
+            />
+          ),
+        },
+        {
+          key: 'end_date_to',
+          label: 'تا تاریخ',
+          type: 'custom',
+          customComponent: (
+            <JalaliDatePicker
+              value={extraFilters.end_date_to || null}
+              onChange={(date) => handleFilterChange('end_date_to', date)}
+              placeholder="1405/12/29"
+              label=""
+            />
+          ),
+        },
       ],
     },
   ];
@@ -284,7 +475,7 @@ export const ResearchList: React.FC<ResearchListProps> = ({
         <div className="header-title">
           <FileText size={24} />
           <h2>پژوهش‌ها</h2>
-          <span className="badge">{totalCount}</span>
+          <span className="badge">{toPersianNumber(totalCount)}</span>
         </div>
         {onAdd && (
           <button className="btn-primary" onClick={onAdd}>
@@ -298,7 +489,7 @@ export const ResearchList: React.FC<ResearchListProps> = ({
       <div className="search-section">
         <SearchBar
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearchChange}
           placeholder="جستجو در کد، عنوان و توضیحات..."
         />
 
@@ -324,7 +515,7 @@ export const ResearchList: React.FC<ResearchListProps> = ({
       {showFilters && (
         <FilterPanel
           fields={filterFields}
-          values={filters}
+          values={{ ...filters, ...extraFilters }}
           onChange={handleFilterChange}
         />
       )}
@@ -335,7 +526,14 @@ export const ResearchList: React.FC<ResearchListProps> = ({
         columns={columns}
         rowKey="id"
         loading={isLoading}
-        emptyMessage={hasActiveFilters ? 'با فیلترهای انتخاب شده موردی پیدا نشد' : 'هنوز پژوهشی ثبت نشده است'}
+        emptyMessage={
+          hasActiveFilters
+            ? 'با فیلترهای انتخاب شده موردی پیدا نشد'
+            : 'هنوز پژوهشی ثبت نشده است'
+        }
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={handleSort}
       />
 
       {/* Pagination */}
@@ -350,298 +548,50 @@ export const ResearchList: React.FC<ResearchListProps> = ({
         }}
       />
 
-      {/* ==========================================================
-          فقط استایل‌های مختص ResearchList
-          (استایل‌های عمومی در کامپوننت‌های خودشان هستند)
-          ========================================================== */}
+      {/* استایل‌ها */}
       <style>{`
-        /* --- کانتینر اصلی لیست --- */
-        .research-list {
-          background: white;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        /* --- هدر لیست --- */
-        .research-list-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .header-title {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .header-title h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-        }
-
-        .header-title .badge {
-          background: #eef2ff;
-          color: #4f46e5;
-          padding: 2px 10px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        /* --- دکمه افزودن --- */
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 20px;
-          background: #4f46e5;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-          background: #4338ca;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-
-        /* --- بخش جستجو و فیلتر --- */
-        .search-section {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-
-        .filter-actions {
-          display: flex;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-
-        .filter-toggle {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border: 1.5px solid #e9ecef;
-          border-radius: 8px;
-          background: white;
-          color: #6b7280;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .filter-toggle:hover {
-          border-color: #4f46e5;
-          color: #4f46e5;
-        }
-
-        .filter-toggle.active {
-          border-color: #4f46e5;
-          background: #eef2ff;
-          color: #4f46e5;
-        }
-
-        .badge-filter {
-          color: #4f46e5;
-          font-size: 18px;
-        }
-
-        .clear-filters {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 8px 12px;
-          border: none;
-          background: #fee2e2;
-          color: #dc2626;
-          border-radius: 8px;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .clear-filters:hover {
-          background: #fecaca;
-        }
-
-        /* --- استایل‌های داخل سلول‌های جدول (مخصوص Research) --- */
-        .code-title {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .code-badge {
-          background: #eef2ff;
-          color: #4f46e5;
-          padding: 2px 10px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 600;
-          display: inline-block;
-          width: fit-content;
-        }
-
-        .title {
-          font-weight: 500;
-          font-size: 14px;
-          color: #1a1a2e;
-        }
-
-        .budget-cell {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          font-weight: 500;
-        }
-
-        .researcher-cell {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: #374151;
-        }
-
-        .researchers-cell {
-          font-size: 13px;
-          color: #374151;
-          max-width: 150px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .affiliation-cell {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: #374151;
-          font-size: 13px;
-        }
-
-        .attachments-cell {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .attachment-count {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .attachment-icons {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .attachment-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border-radius: 4px;
-          color: #4f46e5;
-          background: #eef2ff;
-          transition: all 0.2s;
-          text-decoration: none;
-        }
-
-        .attachment-link:hover {
-          background: #dbeafe;
-          color: #4338ca;
-        }
-
-        .more-files {
-          font-size: 11px;
-          color: #6b7280;
-          background: #f3f4f6;
-          padding: 0 6px;
-          border-radius: 10px;
-        }
-
-        .actions {
-          display: flex;
-          gap: 4px;
-        }
-
-        .action-btn {
-          width: 32px;
-          height: 32px;
-          border: none;
-          border-radius: 6px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.2s;
-          background: transparent;
-          color: #6b7280;
-        }
-
-        .action-btn:hover {
-          background: #f3f4f6;
-        }
-
-        .action-btn.view:hover {
-          background: #d1fae5;
-          color: #059669;
-        }
-
-        .action-btn.edit:hover {
-          background: #eef2ff;
-          color: #4f46e5;
-        }
-
-        .action-btn.delete:hover {
-          background: #fee2e2;
-          color: #dc2626;
-        }
-
-        .action-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .text-muted {
-          color: #9ca3af;
-        }
-
-        /* --- واکنش‌گرایی --- */
+        .research-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .research-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-title { display: flex; align-items: center; gap: 12px; }
+        .header-title h2 { margin: 0; font-size: 20px; font-weight: 600; }
+        .header-title .badge { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .search-section { display: flex; gap: 12px; margin-bottom: 16px; }
+        .filter-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .filter-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid #e9ecef; border-radius: 8px; background: white; color: #6b7280; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .filter-toggle:hover { border-color: #4f46e5; color: #4f46e5; }
+        .filter-toggle.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+        .badge-filter { color: #4f46e5; font-size: 18px; }
+        .clear-filters { display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; border: none; background: #fee2e2; color: #dc2626; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .clear-filters:hover { background: #fecaca; }
+        .code-title { display: flex; flex-direction: column; gap: 4px; }
+        .code-badge { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; width: fit-content; }
+        .title { font-weight: 500; font-size: 14px; color: #1a1a2e; }
+        .budget-cell { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+        .researcher-cell { display: flex; align-items: center; gap: 6px; color: #374151; }
+        .researchers-cell { font-size: 13px; color: #374151; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .affiliation-cell { display: flex; align-items: center; gap: 6px; color: #374151; font-size: 13px; }
+        .attachments-cell { display: flex; align-items: center; gap: 6px; }
+        .attachment-count { font-size: 12px; color: #6b7280; }
+        .attachment-icons { display: flex; align-items: center; gap: 4px; }
+        .attachment-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; color: #4f46e5; background: #eef2ff; transition: all 0.2s; text-decoration: none; }
+        .attachment-link:hover { background: #dbeafe; color: #4338ca; }
+        .more-files { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 0 6px; border-radius: 10px; }
+        .actions { display: flex; gap: 4px; }
+        .action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280; }
+        .action-btn:hover { background: #f3f4f6; }
+        .action-btn.view:hover { background: #d1fae5; color: #059669; }
+        .action-btn.edit:hover { background: #eef2ff; color: #4f46e5; }
+        .action-btn.delete:hover { background: #fee2e2; color: #dc2626; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .text-muted { color: #9ca3af; }
         @media (max-width: 768px) {
-          .research-list {
-            padding: 12px;
-          }
-
-          .search-section {
-            flex-direction: column;
-          }
-
-          .filter-actions {
-            width: 100%;
-          }
-
-          .filter-actions button {
-            flex: 1;
-            justify-content: center;
-          }
-
-          .actions {
-            flex-direction: column;
-            gap: 2px;
-          }
+          .research-list { padding: 12px; }
+          .search-section { flex-direction: column; }
+          .filter-actions { width: 100%; }
+          .filter-actions button { flex: 1; justify-content: center; }
+          .actions { flex-direction: column; gap: 2px; }
         }
       `}</style>
     </div>
@@ -652,7 +602,8 @@ export default ResearchList;
 
 // // src/modules/research/components/ResearchList.tsx
 
-// import React, { useState, useEffect } from 'react';
+// import React, { useState, useMemo } from 'react';
+// import { useNavigate } from 'react-router-dom';
 // import { useResearch } from '../hooks/useResearch';
 // import { RESEARCH_STATUSES, type Research, type ResearchFilters } from '../types/research.types';
 // import { formatCurrency } from '../../../utils/formatter.utils';
@@ -664,11 +615,15 @@ export default ResearchList;
 //   Filter,
 //   X,
 //   FileText,
-//   DollarSign,
 //   User,
 //   Building2,
 //   Paperclip,
 //   GraduationCap,
+//   // ✅ آیکون‌های گروه‌ها
+//   ClipboardList,
+//   Users,
+//   DollarSign,
+//   Calendar,
 // } from 'lucide-react';
 // import {
 //   Pagination,
@@ -678,64 +633,67 @@ export default ResearchList;
 //   StatusBadge,
 //   type Column,
 //   type FilterField,
+//   type FilterGroup,  // ✅ جدید
 // } from '../../../components/common';
+
+// // ✅ برای فیلترهای سفارشی
+// import { PersonSelect } from '../../person/components/PersonSelect';
+// import { CompanySelect } from '../../company/components/CompanySelect';
+// import { UniversitySelect } from '../../university/components/UniversitySelect';
+// import JalaliDatePicker from '../../../components/JalaliDatePicker';
 
 // interface ResearchListProps {
 //   onEdit?: (item: Research) => void;
 //   onDelete?: (id: number) => void;
-//   onView?: (item: Research) => void;
 //   onAdd?: () => void;
 // }
 
 // export const ResearchList: React.FC<ResearchListProps> = ({
 //   onEdit,
 //   onDelete,
-//   onView,
 //   onAdd,
 // }) => {
+//   const navigate = useNavigate();
 //   const { useList, delete: deleteResearch, isDeleting } = useResearch();
 
+//   // ========== State ==========
 //   const [filters, setFilters] = useState<ResearchFilters>({});
 //   const [searchTerm, setSearchTerm] = useState('');
-//   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-//   const [yearInput, setYearInput] = useState<string>('');
-//   const [debouncedYear, setDebouncedYear] = useState<number | undefined>(undefined);
 //   const [showFilters, setShowFilters] = useState(false);
 //   const [currentPage, setCurrentPage] = useState(1);
 //   const [pageSize, setPageSize] = useState(10);
 //   const [sortField, setSortField] = useState<string>('created_at');
 //   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-//   // Debounce for search
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       setDebouncedSearchTerm(searchTerm);
-//       setCurrentPage(1);
-//     }, 500);
-//     return () => clearTimeout(timer);
-//   }, [searchTerm]);
+//   // ✅ فیلترهای اضافی (خارج از ResearchFilters تایپ)
+//   const [extraFilters, setExtraFilters] = useState<{
+//     budget_min?: number;
+//     budget_max?: number;
+//     approve_date_from?: string;
+//     approve_date_to?: string;
+//     start_date_from?: string;
+//     start_date_to?: string;
+//     end_date_from?: string;
+//     end_date_to?: string;
+//   }>({});
 
-//   // Debounce for year
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       const yearValue = filters.year;
-//       setDebouncedYear(yearValue);
-//       setCurrentPage(1);
-//     }, 500);
-//     return () => clearTimeout(timer);
-//   }, [filters.year]);
-
+//   // ========== Query ==========
 //   const { data, isLoading, refetch } = useList({
 //     ...filters,
-//     year: debouncedYear,
-//     search: debouncedSearchTerm || undefined,
+//     ...extraFilters,
+//     search: searchTerm || undefined,
 //     page: currentPage,
 //     page_size: pageSize,
 //     ordering: sortOrder === 'desc' ? `-${sortField}` : sortField,
-//   });
+//   } as any);
 
 //   const researches = data?.results || [];
 //   const totalCount = data?.count || 0;
+
+//   // ========== Handlers ==========
+//   const handleView = (item: Research) => {
+//     navigate(`/research/${item.id}`);
+//   };
 
 //   const handleDelete = async (id: number) => {
 //     if (window.confirm('آیا از حذف این پژوهش مطمئن هستید؟')) {
@@ -744,38 +702,69 @@ export default ResearchList;
 //     }
 //   };
 
-//   const handleFilterChange = (key: keyof ResearchFilters, value: any) => {
-//     let finalValue = value;
-    
-//     if (key === 'year' && value) {
-//       const numValue = Number(value);
-//       finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+//   const handleSearchChange = (value: string) => {
+//     setSearchTerm(value);
+//     setCurrentPage(1);
+//   };
+
+//   const handleFilterChange = (key: string, value: any) => {
+//     const extraKeys = [
+//       'budget_min', 'budget_max',
+//       'approve_date_from', 'approve_date_to',
+//       'start_date_from', 'start_date_to',
+//       'end_date_from', 'end_date_to',
+//     ];
+
+//     if (extraKeys.includes(key)) {
+//       setExtraFilters((prev) => ({
+//         ...prev,
+//         [key]: value || undefined,
+//       }));
+//     } else {
+//       let finalValue = value;
+
+//       if (key === 'year' && value) {
+//         const numValue = Number(value);
+//         finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+//       }
+
+//       setFilters((prev) => ({
+//         ...prev,
+//         [key]: finalValue || undefined,
+//       }));
 //     }
-    
-//     setFilters((prev) => ({
-//       ...prev,
-//       [key]: finalValue || undefined,
-//     }));
+
 //     setCurrentPage(1);
 //   };
 
 //   const clearFilters = () => {
 //     setFilters({});
+//     setExtraFilters({});
 //     setSearchTerm('');
-//     setDebouncedSearchTerm('');
-//     setYearInput('');
-//     setDebouncedYear(undefined);
 //     setCurrentPage(1);
 //   };
 
-//   const hasActiveFilters = searchTerm || 
-//     Object.values(filters).some(v => v !== undefined && v !== '' && v !== null);
+//   const hasActiveFilters =
+//     searchTerm ||
+//     Object.values(filters).some((v) => v !== undefined && v !== '' && v !== null) ||
+//     Object.values(extraFilters).some((v) => v !== undefined && v !== '' && v !== null);
 
-//   // تعریف ستون‌های جدول
+//   const handleSort = (field: string) => {
+//     if (sortField === field) {
+//       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+//     } else {
+//       setSortField(field);
+//       setSortOrder('asc');
+//     }
+//     setCurrentPage(1);
+//   };
+
+//   // ========== ستون‌های جدول ==========
 //   const columns: Column<Research>[] = [
 //     {
 //       key: 'code',
 //       title: 'کد / عنوان',
+//       sortable: true,
 //       render: (item) => (
 //         <div className="code-title">
 //           <span className="code-badge">{item.code}</span>
@@ -793,10 +782,12 @@ export default ResearchList;
 //     {
 //       key: 'year',
 //       title: 'سال',
+//       sortable: true,
 //     },
 //     {
 //       key: 'budget',
 //       title: 'مبلغ',
+//       sortable: true,
 //       render: (item) => (
 //         <div className="budget-cell">
 //           {item.budget ? formatCurrency(item.budget) : '—'}
@@ -876,7 +867,7 @@ export default ResearchList;
 //       width: 120,
 //       render: (item) => (
 //         <div className="actions">
-//           <button className="action-btn view" onClick={() => onView?.(item)} title="مشاهده">
+//           <button className="action-btn view" onClick={() => handleView(item)} title="مشاهده">
 //             <Eye size={16} />
 //           </button>
 //           <button className="action-btn edit" onClick={() => onEdit?.(item)} title="ویرایش">
@@ -895,7 +886,607 @@ export default ResearchList;
 //     },
 //   ];
 
-//   // تعریف فیلدهای فیلتر
+//   // ========== گروه‌های فیلتر ==========
+//   const filterGroups: FilterGroup[] = [
+//     // ========== اطلاعات پایه ==========
+//     {
+//       key: 'basic',
+//       title: 'اطلاعات پایه',
+//       icon: <ClipboardList size={16} />,
+//       defaultOpen: true,
+//       fields: [
+//         {
+//           key: 'status',
+//           label: 'وضعیت',
+//           type: 'select',
+//           options: Object.entries(RESEARCH_STATUSES).map(([key, { label }]) => ({
+//             value: key,
+//             label,
+//           })),
+//         },
+//         {
+//           key: 'year',
+//           label: 'سال',
+//           type: 'number',
+//           placeholder: 'مثال: 1402',
+//         },
+//         {
+//           key: 'affiliation_type',
+//           label: 'نوع همکار',
+//           type: 'select',
+//           options: [
+//             { value: 'UNIVERSITY', label: 'دانشگاه' },
+//             { value: 'COMPANY', label: 'شرکت' },
+//           ],
+//         },
+//       ],
+//     },
+
+//     // ========== پژوهشگر و همکاران ==========
+//     {
+//       key: 'parties',
+//       title: 'پژوهشگر و همکاران',
+//       icon: <Users size={16} />,
+//       defaultOpen: true,
+//       fields: [
+//         {
+//           key: 'primary_researcher',
+//           label: 'پژوهشگر اصلی',
+//           type: 'custom',
+//           customComponent: (
+//             <PersonSelect
+//               value={filters.primary_researcher ?? null}
+//               onChange={(id) => handleFilterChange('primary_researcher', id)}
+//               placeholder="انتخاب پژوهشگر..."
+//               label=""
+//             />
+//           ),
+//         },
+//         {
+//           key: 'university',
+//           label: 'دانشگاه',
+//           type: 'custom',
+//           customComponent: (
+//             <UniversitySelect
+//               value={filters.university ?? null}
+//               onChange={(id) => handleFilterChange('university', id)}
+//               placeholder="انتخاب دانشگاه..."
+//             />
+//           ),
+//         },
+//         {
+//           key: 'company',
+//           label: 'شرکت',
+//           type: 'custom',
+//           customComponent: (
+//             <CompanySelect
+//               value={filters.company ?? null}
+//               onChange={(id) => handleFilterChange('company', id)}
+//               placeholder="انتخاب شرکت..."
+//             />
+//           ),
+//         },
+//       ],
+//     },
+
+//     // ========== بازه بودجه ==========
+//     {
+//       key: 'budget',
+//       title: 'بازه بودجه',
+//       icon: <DollarSign size={16} />,
+//       defaultOpen: true,
+//       fields: [
+//         {
+//           key: 'budget_min',
+//           label: 'از (ریال)',
+//           type: 'number',
+//           placeholder: 'حداقل بودجه',
+//         },
+//         {
+//           key: 'budget_max',
+//           label: 'تا (ریال)',
+//           type: 'number',
+//           placeholder: 'حداکثر بودجه',
+//         },
+//       ],
+//     },
+
+//     // ========== تاریخ تصویب ==========
+//     {
+//       key: 'approve_date',
+//       title: 'تاریخ تصویب',
+//       icon: <Calendar size={16} />,
+//       defaultOpen: true,
+//       fields: [
+//         {
+//           key: 'approve_date_from',
+//           label: 'از تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.approve_date_from || null}
+//               onChange={(date) => handleFilterChange('approve_date_from', date)}
+//               placeholder="1402/01/01"
+//               label=""
+//             />
+//           ),
+//         },
+//         {
+//           key: 'approve_date_to',
+//           label: 'تا تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.approve_date_to || null}
+//               onChange={(date) => handleFilterChange('approve_date_to', date)}
+//               placeholder="1402/12/29"
+//               label=""
+//             />
+//           ),
+//         },
+//       ],
+//     },
+
+//     // ========== تاریخ شروع ==========
+//     {
+//       key: 'start_date',
+//       title: 'تاریخ شروع',
+//       icon: <Calendar size={16} />,
+//       defaultOpen: false,
+//       fields: [
+//         {
+//           key: 'start_date_from',
+//           label: 'از تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.start_date_from || null}
+//               onChange={(date) => handleFilterChange('start_date_from', date)}
+//               placeholder="1402/01/01"
+//               label=""
+//             />
+//           ),
+//         },
+//         {
+//           key: 'start_date_to',
+//           label: 'تا تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.start_date_to || null}
+//               onChange={(date) => handleFilterChange('start_date_to', date)}
+//               placeholder="1402/12/29"
+//               label=""
+//             />
+//           ),
+//         },
+//       ],
+//     },
+
+//     // ========== تاریخ پایان ==========
+//     {
+//       key: 'end_date',
+//       title: 'تاریخ پایان',
+//       icon: <Calendar size={16} />,
+//       defaultOpen: false,
+//       fields: [
+//         {
+//           key: 'end_date_from',
+//           label: 'از تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.end_date_from || null}
+//               onChange={(date) => handleFilterChange('end_date_from', date)}
+//               placeholder="1402/01/01"
+//               label=""
+//             />
+//           ),
+//         },
+//         {
+//           key: 'end_date_to',
+//           label: 'تا تاریخ',
+//           type: 'custom',
+//           customComponent: (
+//             <JalaliDatePicker
+//               value={extraFilters.end_date_to || null}
+//               onChange={(date) => handleFilterChange('end_date_to', date)}
+//               placeholder="1402/12/29"
+//               label=""
+//             />
+//           ),
+//         },
+//       ],
+//     },
+//   ];
+
+//   return (
+//     <div className="research-list">
+//       {/* Header */}
+//       <div className="research-list-header">
+//         <div className="header-title">
+//           <FileText size={24} />
+//           <h2>پژوهش‌ها</h2>
+//           <span className="badge">{totalCount}</span>
+//         </div>
+//         {onAdd && (
+//           <button className="btn-primary" onClick={onAdd}>
+//             <Plus size={18} />
+//             افزودن پژوهش
+//           </button>
+//         )}
+//       </div>
+
+//       {/* Search & Filters */}
+//       <div className="search-section">
+//         <SearchBar
+//           value={searchTerm}
+//           onChange={handleSearchChange}
+//           placeholder="جستجو در کد، عنوان و توضیحات..."
+//         />
+
+//         <div className="filter-actions">
+//           <button
+//             className={`filter-toggle ${showFilters ? 'active' : ''}`}
+//             onClick={() => setShowFilters(!showFilters)}
+//           >
+//             <Filter size={16} />
+//             فیلترها
+//             {hasActiveFilters && <span className="badge-filter">•</span>}
+//           </button>
+//           {hasActiveFilters && (
+//             <button className="clear-filters" onClick={clearFilters}>
+//               <X size={14} />
+//               پاک کردن
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Filter Panel (گروه‌بندی شده) */}
+//       {showFilters && (
+//         <FilterPanel
+//           groups={filterGroups}
+//           values={{ ...filters, ...extraFilters }}
+//           onChange={handleFilterChange}
+//         />
+//       )}
+
+//       {/* Data Table */}
+//       <DataTable
+//         data={researches}
+//         columns={columns}
+//         rowKey="id"
+//         loading={isLoading}
+//         emptyMessage={
+//           hasActiveFilters
+//             ? 'با فیلترهای انتخاب شده موردی پیدا نشد'
+//             : 'هنوز پژوهشی ثبت نشده است'
+//         }
+//         sortField={sortField}
+//         sortOrder={sortOrder}
+//         onSort={handleSort}
+//       />
+
+//       {/* Pagination */}
+//       <Pagination
+//         totalItems={totalCount}
+//         pageSize={pageSize}
+//         currentPage={currentPage}
+//         onPageChange={setCurrentPage}
+//         onPageSizeChange={(size) => {
+//           setPageSize(size);
+//           setCurrentPage(1);
+//         }}
+//       />
+
+//       {/* استایل‌ها */}
+//       <style>{`
+//         .research-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+//         .research-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+//         .header-title { display: flex; align-items: center; gap: 12px; }
+//         .header-title h2 { margin: 0; font-size: 20px; font-weight: 600; }
+//         .header-title .badge { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+//         .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+//         .btn-primary:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+//         .search-section { display: flex; gap: 12px; margin-bottom: 16px; }
+//         .filter-actions { display: flex; gap: 8px; flex-shrink: 0; }
+//         .filter-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1.5px solid #e9ecef; border-radius: 8px; background: white; color: #6b7280; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+//         .filter-toggle:hover { border-color: #4f46e5; color: #4f46e5; }
+//         .filter-toggle.active { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+//         .badge-filter { color: #4f46e5; font-size: 18px; }
+//         .clear-filters { display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px; border: none; background: #fee2e2; color: #dc2626; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+//         .clear-filters:hover { background: #fecaca; }
+//         .code-title { display: flex; flex-direction: column; gap: 4px; }
+//         .code-badge { background: #eef2ff; color: #4f46e5; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; width: fit-content; }
+//         .title { font-weight: 500; font-size: 14px; color: #1a1a2e; }
+//         .budget-cell { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+//         .researcher-cell { display: flex; align-items: center; gap: 6px; color: #374151; }
+//         .researchers-cell { font-size: 13px; color: #374151; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+//         .affiliation-cell { display: flex; align-items: center; gap: 6px; color: #374151; font-size: 13px; }
+//         .attachments-cell { display: flex; align-items: center; gap: 6px; }
+//         .attachment-count { font-size: 12px; color: #6b7280; }
+//         .attachment-icons { display: flex; align-items: center; gap: 4px; }
+//         .attachment-link { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; color: #4f46e5; background: #eef2ff; transition: all 0.2s; text-decoration: none; }
+//         .attachment-link:hover { background: #dbeafe; color: #4338ca; }
+//         .more-files { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 0 6px; border-radius: 10px; }
+//         .actions { display: flex; gap: 4px; }
+//         .action-btn { width: 32px; height: 32px; border: none; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; background: transparent; color: #6b7280; }
+//         .action-btn:hover { background: #f3f4f6; }
+//         .action-btn.view:hover { background: #d1fae5; color: #059669; }
+//         .action-btn.edit:hover { background: #eef2ff; color: #4f46e5; }
+//         .action-btn.delete:hover { background: #fee2e2; color: #dc2626; }
+//         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+//         .text-muted { color: #9ca3af; }
+//         @media (max-width: 768px) {
+//           .research-list { padding: 12px; }
+//           .search-section { flex-direction: column; }
+//           .filter-actions { width: 100%; }
+//           .filter-actions button { flex: 1; justify-content: center; }
+//           .actions { flex-direction: column; gap: 2px; }
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default ResearchList;
+
+// // src/modules/research/components/ResearchList.tsx
+
+// import React, { useState, useMemo } from 'react';
+// // ✅ useEffect حذف شد چون debounce دوتایی داشتیم
+// import { useNavigate } from 'react-router-dom';
+// import { useResearch } from '../hooks/useResearch';
+// import { RESEARCH_STATUSES, type Research, type ResearchFilters } from '../types/research.types';
+// import { formatCurrency } from '../../../utils/formatter.utils';
+// import {
+//   Plus,
+//   Pencil,
+//   Trash2,
+//   Eye,
+//   Filter,
+//   X,
+//   FileText,
+//   DollarSign,
+//   User,
+//   Building2,
+//   Paperclip,
+//   GraduationCap,
+// } from 'lucide-react';
+// import {
+//   Pagination,
+//   SearchBar,
+//   FilterPanel,
+//   DataTable,
+//   StatusBadge,
+//   type Column,
+//   type FilterField,
+// } from '../../../components/common';
+
+// interface ResearchListProps {
+//   onEdit?: (item: Research) => void;
+//   onDelete?: (id: number) => void;
+//   onAdd?: () => void;
+// }
+
+// export const ResearchList: React.FC<ResearchListProps> = ({
+//   onEdit,
+//   onDelete,
+//   onAdd,
+// }) => {
+//   const navigate = useNavigate();
+//   const { useList, delete: deleteResearch, isDeleting } = useResearch();
+
+//   // ========== State ==========
+//   const [filters, setFilters] = useState<ResearchFilters>({});
+//   // ✅ فقط searchTerm داریم. SearchBar خودش debounce می‌کنه
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [showFilters, setShowFilters] = useState(false);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [pageSize, setPageSize] = useState(10);
+//   const [sortField, setSortField] = useState<string>('created_at');
+//   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+//   // ========== Query ==========
+//   // ✅ مستقیم از searchTerm استفاده می‌کنیم (debounce در SearchBar هست)
+//   const { data, isLoading, refetch } = useList({
+//     ...filters,
+//     search: searchTerm || undefined,
+//     page: currentPage,
+//     page_size: pageSize,
+//     ordering: sortOrder === 'desc' ? `-${sortField}` : sortField,
+//   });
+
+//   const researches = data?.results || [];
+//   const totalCount = data?.count || 0;
+
+//   // ========== Handlers ==========
+//   const handleView = (item: Research) => {
+//     navigate(`/research/${item.id}`);
+//   };
+
+//   const handleDelete = async (id: number) => {
+//     if (window.confirm('آیا از حذف این پژوهش مطمئن هستید؟')) {
+//       await deleteResearch(id);
+//       refetch();
+//     }
+//   };
+
+//   // ✅ جدید: هر بار جستجو، برو به صفحه 1
+//   const handleSearchChange = (value: string) => {
+//     setSearchTerm(value);
+//     setCurrentPage(1);
+//   };
+
+//   const handleFilterChange = (key: keyof ResearchFilters, value: any) => {
+//     let finalValue = value;
+
+//     if (key === 'year' && value) {
+//       const numValue = Number(value);
+//       finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+//     }
+
+//     setFilters((prev) => ({
+//       ...prev,
+//       [key]: finalValue || undefined,
+//     }));
+//     setCurrentPage(1);
+//   };
+
+//   // ✅ ساده‌شده
+//   const clearFilters = () => {
+//     setFilters({});
+//     setSearchTerm('');
+//     setCurrentPage(1);
+//   };
+
+//   const hasActiveFilters =
+//     searchTerm ||
+//     Object.values(filters).some((v) => v !== undefined && v !== '' && v !== null);
+
+//   // ✅ جدید: handleSort برای DataTable
+//   const handleSort = (field: string) => {
+//     if (sortField === field) {
+//       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+//     } else {
+//       setSortField(field);
+//       setSortOrder('asc');
+//     }
+//     setCurrentPage(1);
+//   };
+
+//   // ========== ستون‌های جدول ==========
+//   const columns: Column<Research>[] = [
+//     {
+//       key: 'code',
+//       title: 'کد / عنوان',
+//       // ✅ sortable اضافه شد
+//       sortable: true,
+//       render: (item) => (
+//         <div className="code-title">
+//           <span className="code-badge">{item.code}</span>
+//           <span className="title">{item.title}</span>
+//         </div>
+//       ),
+//     },
+//     {
+//       key: 'status',
+//       title: 'وضعیت',
+//       render: (item) => (
+//         <StatusBadge status={item.status} config={RESEARCH_STATUSES} />
+//       ),
+//     },
+//     {
+//       key: 'year',
+//       title: 'سال',
+//       // ✅ sortable اضافه شد
+//       sortable: true,
+//     },
+//     {
+//       key: 'budget',
+//       title: 'مبلغ',
+//       // ✅ sortable اضافه شد
+//       sortable: true,
+//       render: (item) => (
+//         <div className="budget-cell">
+//           {item.budget ? formatCurrency(item.budget) : '—'}
+//         </div>
+//       ),
+//     },
+//     {
+//       key: 'primary_researcher_name',
+//       title: 'پژوهشگر اصلی',
+//       render: (item) => (
+//         <div className="researcher-cell">
+//           <User size={14} />
+//           {item.primary_researcher_name || '—'}
+//         </div>
+//       ),
+//     },
+//     {
+//       key: 'researchers',
+//       title: 'همکاران',
+//       render: (item) => (
+//         <div className="researchers-cell" title={item.researchers || ''}>
+//           {item.researchers_display || item.researchers || '—'}
+//         </div>
+//       ),
+//     },
+//     {
+//       key: 'affiliation_type',
+//       title: 'نوع همکار',
+//       render: (item) => (
+//         <div className="affiliation-cell">
+//           {item.affiliation_type === 'UNIVERSITY' ? (
+//             <GraduationCap size={14} />
+//           ) : (
+//             <Building2 size={14} />
+//           )}
+//           {item.affiliation_type === 'UNIVERSITY'
+//             ? item.university_name || '—'
+//             : item.company_name || '—'}
+//         </div>
+//       ),
+//     },
+//     {
+//       key: 'attachments',
+//       title: 'فایل‌ها',
+//       render: (item) => (
+//         <>
+//           {item.attachments && item.attachments.length > 0 ? (
+//             <div className="attachments-cell">
+//               <span className="attachment-count">{item.attachments.length} فایل</span>
+//               <div className="attachment-icons">
+//                 {item.attachments.slice(0, 3).map((att) => (
+//                   <a
+//                     key={att.id}
+//                     href={att.file}
+//                     target="_blank"
+//                     rel="noopener noreferrer"
+//                     className="attachment-link"
+//                     title={att.filename}
+//                   >
+//                     <Paperclip size={12} />
+//                   </a>
+//                 ))}
+//                 {item.attachments.length > 3 && (
+//                   <span className="more-files">+{item.attachments.length - 3}</span>
+//                 )}
+//               </div>
+//             </div>
+//           ) : (
+//             <span className="text-muted">—</span>
+//           )}
+//         </>
+//       ),
+//     },
+//     {
+//       key: 'actions',
+//       title: 'عملیات',
+//       width: 120,
+//       render: (item) => (
+//         <div className="actions">
+//           <button className="action-btn view" onClick={() => handleView(item)} title="مشاهده">
+//             <Eye size={16} />
+//           </button>
+//           <button className="action-btn edit" onClick={() => onEdit?.(item)} title="ویرایش">
+//             <Pencil size={16} />
+//           </button>
+//           <button
+//             className="action-btn delete"
+//             onClick={() => handleDelete(item.id)}
+//             disabled={isDeleting}
+//             title="حذف"
+//           >
+//             <Trash2 size={16} />
+//           </button>
+//         </div>
+//       ),
+//     },
+//   ];
+
+//   // ========== فیلدهای فیلتر ==========
 //   const filterFields: FilterField[] = [
 //     {
 //       key: 'status',
@@ -944,7 +1535,7 @@ export default ResearchList;
 //       <div className="search-section">
 //         <SearchBar
 //           value={searchTerm}
-//           onChange={setSearchTerm}
+//           onChange={handleSearchChange}
 //           placeholder="جستجو در کد، عنوان و توضیحات..."
 //         />
 
@@ -981,7 +1572,14 @@ export default ResearchList;
 //         columns={columns}
 //         rowKey="id"
 //         loading={isLoading}
-//         emptyMessage={hasActiveFilters ? 'با فیلترهای انتخاب شده موردی پیدا نشد' : 'هنوز پژوهشی ثبت نشده است'}
+//         emptyMessage={
+//           hasActiveFilters
+//             ? 'با فیلترهای انتخاب شده موردی پیدا نشد'
+//             : 'هنوز پژوهشی ثبت نشده است'
+//         }
+//         sortField={sortField}
+//         sortOrder={sortOrder}
+//         onSort={handleSort}
 //       />
 
 //       {/* Pagination */}
@@ -998,10 +1596,8 @@ export default ResearchList;
 
 //       {/* ==========================================================
 //           فقط استایل‌های مختص ResearchList
-//           (استایل‌های عمومی در کامپوننت‌های خودشان هستند)
 //           ========================================================== */}
 //       <style>{`
-//         /* --- کانتینر اصلی لیست --- */
 //         .research-list {
 //           background: white;
 //           border-radius: 12px;
@@ -1009,7 +1605,6 @@ export default ResearchList;
 //           box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 //         }
 
-//         /* --- هدر لیست --- */
 //         .research-list-header {
 //           display: flex;
 //           justify-content: space-between;
@@ -1038,7 +1633,6 @@ export default ResearchList;
 //           font-weight: 600;
 //         }
 
-//         /* --- دکمه افزودن --- */
 //         .btn-primary {
 //           display: inline-flex;
 //           align-items: center;
@@ -1059,7 +1653,6 @@ export default ResearchList;
 //           box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 //         }
 
-//         /* --- بخش جستجو و فیلتر --- */
 //         .search-section {
 //           display: flex;
 //           gap: 12px;
@@ -1120,7 +1713,6 @@ export default ResearchList;
 //           background: #fecaca;
 //         }
 
-//         /* --- استایل‌های داخل سلول‌های جدول (مخصوص Research) --- */
 //         .code-title {
 //           display: flex;
 //           flex-direction: column;
@@ -1265,7 +1857,6 @@ export default ResearchList;
 //           color: #9ca3af;
 //         }
 
-//         /* --- واکنش‌گرایی --- */
 //         @media (max-width: 768px) {
 //           .research-list {
 //             padding: 12px;
@@ -1295,3 +1886,655 @@ export default ResearchList;
 // };
 
 // export default ResearchList;
+
+// // // src/modules/research/components/ResearchList.tsx
+
+// // import React, { useState, useEffect } from 'react';
+// // import { useNavigate } from 'react-router-dom';
+// // import { useResearch } from '../hooks/useResearch';
+// // import { RESEARCH_STATUSES, type Research, type ResearchFilters } from '../types/research.types';
+// // import { formatCurrency } from '../../../utils/formatter.utils';
+// // import {
+// //   Plus,
+// //   Pencil,
+// //   Trash2,
+// //   Eye,
+// //   Filter,
+// //   X,
+// //   FileText,
+// //   DollarSign,
+// //   User,
+// //   Building2,
+// //   Paperclip,
+// //   GraduationCap,
+// // } from 'lucide-react';
+// // import {
+// //   Pagination,
+// //   SearchBar,
+// //   FilterPanel,
+// //   DataTable,
+// //   StatusBadge,
+// //   type Column,
+// //   type FilterField,
+// // } from '../../../components/common';
+
+// // interface ResearchListProps {
+// //   onEdit?: (item: Research) => void;
+// //   onDelete?: (id: number) => void;
+// //   onAdd?: () => void;
+// // }
+
+// // export const ResearchList: React.FC<ResearchListProps> = ({
+// //   onEdit,
+// //   onDelete,
+// //   onAdd,
+// // }) => {
+// //   const navigate = useNavigate();
+// //   const { useList, delete: deleteResearch, isDeleting } = useResearch();
+
+// //   const [filters, setFilters] = useState<ResearchFilters>({});
+// //   const [searchTerm, setSearchTerm] = useState('');
+// //   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+// //   const [yearInput, setYearInput] = useState<string>('');
+// //   const [debouncedYear, setDebouncedYear] = useState<number | undefined>(undefined);
+// //   const [showFilters, setShowFilters] = useState(false);
+// //   const [currentPage, setCurrentPage] = useState(1);
+// //   const [pageSize, setPageSize] = useState(10);
+// //   const [sortField, setSortField] = useState<string>('created_at');
+// //   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+// //   // Debounce for search
+// //   useEffect(() => {
+// //     const timer = setTimeout(() => {
+// //       setDebouncedSearchTerm(searchTerm);
+// //       setCurrentPage(1);
+// //     }, 500);
+// //     return () => clearTimeout(timer);
+// //   }, [searchTerm]);
+
+// //   // Debounce for year
+// //   useEffect(() => {
+// //     const timer = setTimeout(() => {
+// //       const yearValue = filters.year;
+// //       setDebouncedYear(yearValue);
+// //       setCurrentPage(1);
+// //     }, 500);
+// //     return () => clearTimeout(timer);
+// //   }, [filters.year]);
+
+// //   const { data, isLoading, refetch } = useList({
+// //     ...filters,
+// //     year: debouncedYear,
+// //     search: debouncedSearchTerm || undefined,
+// //     page: currentPage,
+// //     page_size: pageSize,
+// //     ordering: sortOrder === 'desc' ? `-${sortField}` : sortField,
+// //   });
+
+// //   const researches = data?.results || [];
+// //   const totalCount = data?.count || 0;
+
+// //   // ========== Handle View - رفتن به صفحه جزئیات ==========
+// //   const handleView = (item: Research) => {
+// //     navigate(`/research/${item.id}`);
+// //   };
+
+// //   const handleDelete = async (id: number) => {
+// //     if (window.confirm('آیا از حذف این پژوهش مطمئن هستید؟')) {
+// //       await deleteResearch(id);
+// //       refetch();
+// //     }
+// //   };
+
+// //   const handleFilterChange = (key: keyof ResearchFilters, value: any) => {
+// //     let finalValue = value;
+    
+// //     if (key === 'year' && value) {
+// //       const numValue = Number(value);
+// //       finalValue = !isNaN(numValue) && numValue > 0 ? numValue : undefined;
+// //     }
+    
+// //     setFilters((prev) => ({
+// //       ...prev,
+// //       [key]: finalValue || undefined,
+// //     }));
+// //     setCurrentPage(1);
+// //   };
+
+// //   const clearFilters = () => {
+// //     setFilters({});
+// //     setSearchTerm('');
+// //     setDebouncedSearchTerm('');
+// //     setYearInput('');
+// //     setDebouncedYear(undefined);
+// //     setCurrentPage(1);
+// //   };
+
+// //   const hasActiveFilters = searchTerm || 
+// //     Object.values(filters).some(v => v !== undefined && v !== '' && v !== null);
+
+// //   // تعریف ستون‌های جدول
+// //   const columns: Column<Research>[] = [
+// //     {
+// //       key: 'code',
+// //       title: 'کد / عنوان',
+// //       render: (item) => (
+// //         <div className="code-title">
+// //           <span className="code-badge">{item.code}</span>
+// //           <span className="title">{item.title}</span>
+// //         </div>
+// //       ),
+// //     },
+// //     {
+// //       key: 'status',
+// //       title: 'وضعیت',
+// //       render: (item) => (
+// //         <StatusBadge status={item.status} config={RESEARCH_STATUSES} />
+// //       ),
+// //     },
+// //     {
+// //       key: 'year',
+// //       title: 'سال',
+// //     },
+// //     {
+// //       key: 'budget',
+// //       title: 'مبلغ',
+// //       render: (item) => (
+// //         <div className="budget-cell">
+// //           {item.budget ? formatCurrency(item.budget) : '—'}
+// //         </div>
+// //       ),
+// //     },
+// //     {
+// //       key: 'primary_researcher_name',
+// //       title: 'پژوهشگر اصلی',
+// //       render: (item) => (
+// //         <div className="researcher-cell">
+// //           <User size={14} />
+// //           {item.primary_researcher_name || '—'}
+// //         </div>
+// //       ),
+// //     },
+// //     {
+// //       key: 'researchers',
+// //       title: 'همکاران',
+// //       render: (item) => (
+// //         <div className="researchers-cell" title={item.researchers || ''}>
+// //           {item.researchers_display || item.researchers || '—'}
+// //         </div>
+// //       ),
+// //     },
+// //     {
+// //       key: 'affiliation_type',
+// //       title: 'نوع همکار',
+// //       render: (item) => (
+// //         <div className="affiliation-cell">
+// //           {item.affiliation_type === 'UNIVERSITY' ? (
+// //             <GraduationCap size={14} />
+// //           ) : (
+// //             <Building2 size={14} />
+// //           )}
+// //           {item.affiliation_type === 'UNIVERSITY'
+// //             ? item.university_name || '—'
+// //             : item.company_name || '—'}
+// //         </div>
+// //       ),
+// //     },
+// //     {
+// //       key: 'attachments',
+// //       title: 'فایل‌ها',
+// //       render: (item) => (
+// //         <>
+// //           {item.attachments && item.attachments.length > 0 ? (
+// //             <div className="attachments-cell">
+// //               <span className="attachment-count">{item.attachments.length} فایل</span>
+// //               <div className="attachment-icons">
+// //                 {item.attachments.slice(0, 3).map((att) => (
+// //                   <a
+// //                     key={att.id}
+// //                     href={att.file}
+// //                     target="_blank"
+// //                     rel="noopener noreferrer"
+// //                     className="attachment-link"
+// //                     title={att.filename}
+// //                   >
+// //                     <Paperclip size={12} />
+// //                   </a>
+// //                 ))}
+// //                 {item.attachments.length > 3 && (
+// //                   <span className="more-files">+{item.attachments.length - 3}</span>
+// //                 )}
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <span className="text-muted">—</span>
+// //           )}
+// //         </>
+// //       ),
+// //     },
+// //     {
+// //       key: 'actions',
+// //       title: 'عملیات',
+// //       width: 120,
+// //       render: (item) => (
+// //         <div className="actions">
+// //           {/* ✅ دکمه مشاهده - رفتن به صفحه جزئیات */}
+// //           <button className="action-btn view" onClick={() => handleView(item)} title="مشاهده">
+// //             <Eye size={16} />
+// //           </button>
+// //           <button className="action-btn edit" onClick={() => onEdit?.(item)} title="ویرایش">
+// //             <Pencil size={16} />
+// //           </button>
+// //           <button
+// //             className="action-btn delete"
+// //             onClick={() => handleDelete(item.id)}
+// //             disabled={isDeleting}
+// //             title="حذف"
+// //           >
+// //             <Trash2 size={16} />
+// //           </button>
+// //         </div>
+// //       ),
+// //     },
+// //   ];
+
+// //   // تعریف فیلدهای فیلتر
+// //   const filterFields: FilterField[] = [
+// //     {
+// //       key: 'status',
+// //       label: 'وضعیت',
+// //       type: 'select',
+// //       options: Object.entries(RESEARCH_STATUSES).map(([key, { label }]) => ({
+// //         value: key,
+// //         label,
+// //       })),
+// //     },
+// //     {
+// //       key: 'year',
+// //       label: 'سال',
+// //       type: 'number',
+// //       placeholder: 'سال را وارد کنید...',
+// //     },
+// //     {
+// //       key: 'affiliation_type',
+// //       label: 'نوع همکار',
+// //       type: 'select',
+// //       options: [
+// //         { value: 'UNIVERSITY', label: 'دانشگاه' },
+// //         { value: 'COMPANY', label: 'شرکت' },
+// //       ],
+// //     },
+// //   ];
+
+// //   return (
+// //     <div className="research-list">
+// //       {/* Header */}
+// //       <div className="research-list-header">
+// //         <div className="header-title">
+// //           <FileText size={24} />
+// //           <h2>پژوهش‌ها</h2>
+// //           <span className="badge">{totalCount}</span>
+// //         </div>
+// //         {onAdd && (
+// //           <button className="btn-primary" onClick={onAdd}>
+// //             <Plus size={18} />
+// //             افزودن پژوهش
+// //           </button>
+// //         )}
+// //       </div>
+
+// //       {/* Search & Filters */}
+// //       <div className="search-section">
+// //         <SearchBar
+// //           value={searchTerm}
+// //           onChange={setSearchTerm}
+// //           placeholder="جستجو در کد، عنوان و توضیحات..."
+// //         />
+
+// //         <div className="filter-actions">
+// //           <button
+// //             className={`filter-toggle ${showFilters ? 'active' : ''}`}
+// //             onClick={() => setShowFilters(!showFilters)}
+// //           >
+// //             <Filter size={16} />
+// //             فیلترها
+// //             {hasActiveFilters && <span className="badge-filter">•</span>}
+// //           </button>
+// //           {hasActiveFilters && (
+// //             <button className="clear-filters" onClick={clearFilters}>
+// //               <X size={14} />
+// //               پاک کردن
+// //             </button>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Filter Panel */}
+// //       {showFilters && (
+// //         <FilterPanel
+// //           fields={filterFields}
+// //           values={filters}
+// //           onChange={handleFilterChange}
+// //         />
+// //       )}
+
+// //       {/* Data Table */}
+// //       <DataTable
+// //         data={researches}
+// //         columns={columns}
+// //         rowKey="id"
+// //         loading={isLoading}
+// //         emptyMessage={hasActiveFilters ? 'با فیلترهای انتخاب شده موردی پیدا نشد' : 'هنوز پژوهشی ثبت نشده است'}
+// //       />
+
+// //       {/* Pagination */}
+// //       <Pagination
+// //         totalItems={totalCount}
+// //         pageSize={pageSize}
+// //         currentPage={currentPage}
+// //         onPageChange={setCurrentPage}
+// //         onPageSizeChange={(size) => {
+// //           setPageSize(size);
+// //           setCurrentPage(1);
+// //         }}
+// //       />
+
+// //       {/* ==========================================================
+// //           فقط استایل‌های مختص ResearchList
+// //           (استایل‌های عمومی در کامپوننت‌های خودشان هستند)
+// //           ========================================================== */}
+// //       <style>{`
+// //         /* --- کانتینر اصلی لیست --- */
+// //         .research-list {
+// //           background: white;
+// //           border-radius: 12px;
+// //           padding: 20px;
+// //           box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+// //         }
+
+// //         /* --- هدر لیست --- */
+// //         .research-list-header {
+// //           display: flex;
+// //           justify-content: space-between;
+// //           align-items: center;
+// //           margin-bottom: 20px;
+// //         }
+
+// //         .header-title {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 12px;
+// //         }
+
+// //         .header-title h2 {
+// //           margin: 0;
+// //           font-size: 20px;
+// //           font-weight: 600;
+// //         }
+
+// //         .header-title .badge {
+// //           background: #eef2ff;
+// //           color: #4f46e5;
+// //           padding: 2px 10px;
+// //           border-radius: 12px;
+// //           font-size: 12px;
+// //           font-weight: 600;
+// //         }
+
+// //         /* --- دکمه افزودن --- */
+// //         .btn-primary {
+// //           display: inline-flex;
+// //           align-items: center;
+// //           gap: 8px;
+// //           padding: 8px 20px;
+// //           background: #4f46e5;
+// //           color: white;
+// //           border: none;
+// //           border-radius: 8px;
+// //           font-weight: 500;
+// //           cursor: pointer;
+// //           transition: all 0.2s;
+// //         }
+
+// //         .btn-primary:hover {
+// //           background: #4338ca;
+// //           transform: translateY(-1px);
+// //           box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+// //         }
+
+// //         /* --- بخش جستجو و فیلتر --- */
+// //         .search-section {
+// //           display: flex;
+// //           gap: 12px;
+// //           margin-bottom: 16px;
+// //         }
+
+// //         .filter-actions {
+// //           display: flex;
+// //           gap: 8px;
+// //           flex-shrink: 0;
+// //         }
+
+// //         .filter-toggle {
+// //           display: inline-flex;
+// //           align-items: center;
+// //           gap: 6px;
+// //           padding: 8px 16px;
+// //           border: 1.5px solid #e9ecef;
+// //           border-radius: 8px;
+// //           background: white;
+// //           color: #6b7280;
+// //           font-size: 14px;
+// //           cursor: pointer;
+// //           transition: all 0.2s;
+// //         }
+
+// //         .filter-toggle:hover {
+// //           border-color: #4f46e5;
+// //           color: #4f46e5;
+// //         }
+
+// //         .filter-toggle.active {
+// //           border-color: #4f46e5;
+// //           background: #eef2ff;
+// //           color: #4f46e5;
+// //         }
+
+// //         .badge-filter {
+// //           color: #4f46e5;
+// //           font-size: 18px;
+// //         }
+
+// //         .clear-filters {
+// //           display: inline-flex;
+// //           align-items: center;
+// //           gap: 4px;
+// //           padding: 8px 12px;
+// //           border: none;
+// //           background: #fee2e2;
+// //           color: #dc2626;
+// //           border-radius: 8px;
+// //           font-size: 13px;
+// //           cursor: pointer;
+// //           transition: all 0.2s;
+// //         }
+
+// //         .clear-filters:hover {
+// //           background: #fecaca;
+// //         }
+
+// //         /* --- استایل‌های داخل سلول‌های جدول (مخصوص Research) --- */
+// //         .code-title {
+// //           display: flex;
+// //           flex-direction: column;
+// //           gap: 4px;
+// //         }
+
+// //         .code-badge {
+// //           background: #eef2ff;
+// //           color: #4f46e5;
+// //           padding: 2px 10px;
+// //           border-radius: 12px;
+// //           font-size: 11px;
+// //           font-weight: 600;
+// //           display: inline-block;
+// //           width: fit-content;
+// //         }
+
+// //         .title {
+// //           font-weight: 500;
+// //           font-size: 14px;
+// //           color: #1a1a2e;
+// //         }
+
+// //         .budget-cell {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 4px;
+// //           font-weight: 500;
+// //         }
+
+// //         .researcher-cell {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 6px;
+// //           color: #374151;
+// //         }
+
+// //         .researchers-cell {
+// //           font-size: 13px;
+// //           color: #374151;
+// //           max-width: 150px;
+// //           white-space: nowrap;
+// //           overflow: hidden;
+// //           text-overflow: ellipsis;
+// //         }
+
+// //         .affiliation-cell {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 6px;
+// //           color: #374151;
+// //           font-size: 13px;
+// //         }
+
+// //         .attachments-cell {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 6px;
+// //         }
+
+// //         .attachment-count {
+// //           font-size: 12px;
+// //           color: #6b7280;
+// //         }
+
+// //         .attachment-icons {
+// //           display: flex;
+// //           align-items: center;
+// //           gap: 4px;
+// //         }
+
+// //         .attachment-link {
+// //           display: inline-flex;
+// //           align-items: center;
+// //           justify-content: center;
+// //           width: 24px;
+// //           height: 24px;
+// //           border-radius: 4px;
+// //           color: #4f46e5;
+// //           background: #eef2ff;
+// //           transition: all 0.2s;
+// //           text-decoration: none;
+// //         }
+
+// //         .attachment-link:hover {
+// //           background: #dbeafe;
+// //           color: #4338ca;
+// //         }
+
+// //         .more-files {
+// //           font-size: 11px;
+// //           color: #6b7280;
+// //           background: #f3f4f6;
+// //           padding: 0 6px;
+// //           border-radius: 10px;
+// //         }
+
+// //         .actions {
+// //           display: flex;
+// //           gap: 4px;
+// //         }
+
+// //         .action-btn {
+// //           width: 32px;
+// //           height: 32px;
+// //           border: none;
+// //           border-radius: 6px;
+// //           display: inline-flex;
+// //           align-items: center;
+// //           justify-content: center;
+// //           cursor: pointer;
+// //           transition: all 0.2s;
+// //           background: transparent;
+// //           color: #6b7280;
+// //         }
+
+// //         .action-btn:hover {
+// //           background: #f3f4f6;
+// //         }
+
+// //         .action-btn.view:hover {
+// //           background: #d1fae5;
+// //           color: #059669;
+// //         }
+
+// //         .action-btn.edit:hover {
+// //           background: #eef2ff;
+// //           color: #4f46e5;
+// //         }
+
+// //         .action-btn.delete:hover {
+// //           background: #fee2e2;
+// //           color: #dc2626;
+// //         }
+
+// //         .action-btn:disabled {
+// //           opacity: 0.5;
+// //           cursor: not-allowed;
+// //         }
+
+// //         .text-muted {
+// //           color: #9ca3af;
+// //         }
+
+// //         /* --- واکنش‌گرایی --- */
+// //         @media (max-width: 768px) {
+// //           .research-list {
+// //             padding: 12px;
+// //           }
+
+// //           .search-section {
+// //             flex-direction: column;
+// //           }
+
+// //           .filter-actions {
+// //             width: 100%;
+// //           }
+
+// //           .filter-actions button {
+// //             flex: 1;
+// //             justify-content: center;
+// //           }
+
+// //           .actions {
+// //             flex-direction: column;
+// //             gap: 2px;
+// //           }
+// //         }
+// //       `}</style>
+// //     </div>
+// //   );
+// // };
+
+// // export default ResearchList;
