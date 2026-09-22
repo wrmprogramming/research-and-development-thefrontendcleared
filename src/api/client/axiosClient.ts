@@ -7,7 +7,7 @@ import axios, {
   AxiosError,
 } from 'axios';
 import { API_CONFIG, API_ENDPOINTS } from '../endpoints';
-import type { ApiResponse, ApiError } from '../../core/types/api.types';
+// import type { ApiResponse, ApiError } from '../../core/types/api.types';
 
 class AxiosClient {
   private static instance: AxiosClient;
